@@ -1,4 +1,4 @@
-
+from Lib.database import obtenerTags
 
 #TODAS LAS VARIABLES DEBERIAN SER CONSTANTES??????
 
@@ -6,7 +6,7 @@
 urlServer = "http://127.0.0.1:8000/updates"
 
 #Configuración etiquetas de versiones VEGA
-etiquetaVersion = ["Vega22", "Vega11"]
+etiquetaVersion = obtenerTags()
 
 #Configuracion de descarga
 UPDATE_DIR = './Downloads'

@@ -1,31 +1,12 @@
+from datetime import date
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
 import json
 import updateConfig as up
-import mariadb
-import sys
 
 app = FastAPI()
-
-#Conexión a la base de datos
-try:
-    conn = mariadb.connect(
-        user="root",
-        password="1881",
-        host="localhost",
-        port=3306,
-        database="servact"
-
-    )
-except mariadb.Error as e:
-    print(f"Error connecting to MariaDB Platform: {e}")
-    sys.exit(1)
-
-# Get Cursor
-cur = conn.cursor()
-
 
 # Directorio donde se almacenarán las actualizaciones
 UPDATE_DIR = up.UPDATE_DIR
@@ -119,24 +100,14 @@ async def upload_update(tag: str, version: str, file: UploadFile = File(...)):
 
     return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
 
+# Obtener Tags de la base de datos
+def obtTags():
+    tags = up.obtenerTags()
+    return tags
 
-# Añadir etiquetas a la base de datos
-def subirTags(tags):
-    # Ensure `tags` is a list of tuples, where each tuple contains a single tag
-    if isinstance(tags, str):  # Handle the case where a single string is passed
-        tags = [(tags,)]
-    else:
-        tags = [(tag,) for tag in tags]
-    try:
-        cur.executemany(
-            "INSERT INTO etiquetas (etiqueta) VALUES (?)", 
-            tags  # Pass list of tuples
-        )
-    except mariadb.Error as e: 
-        print(f"Error: {e}")
-    
-    conn.commit() 
-    print(f"Last Inserted ID: {cur.lastrowid}")
+# Subir Tags a la base de datos
+def subTags(tags):
+    up.subirTags(tags)
 
 if __name__ == "__main__":
     import uvicorn
