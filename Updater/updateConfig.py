@@ -9,7 +9,7 @@ urlServer = "http://127.0.0.1:8000/updates"
 etiquetaVersion = ["Vega22", "Vega11"]
 
 #Configuracion de descarga
-UPDATE_DIR = './Downloads'
+DOWNLOAD_DIR = './Downloads'
 
 #Directorio del archivo json de version del Robot VEGA
 VERSION_DIR = "./version.json"

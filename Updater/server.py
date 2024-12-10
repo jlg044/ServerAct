@@ -32,6 +32,25 @@ def save_index(index):
     with open(INDEX_FILE, 'w') as f:
         json.dump(index, f, indent=4)
 
+
+def iteracionArchivos(dir,tag,updates):
+    
+    for filename in os.listdir(dir): #Para cada archivo en el directorio
+
+        if os.path.isdir(os.path.join(dir, filename)):
+
+            iteracionArchivos(os.path.join(dir, filename),tag,updates)
+                # Recorrer archivos en el subdirectorio
+                # Añadir el tag y el nombre completo del archivo
+        else:
+            updates.append(
+
+            {"tag": tag, 
+            "path": dir,
+            "filename": filename
+            })
+
+
 # Ruta para listar las versiones disponibles para un tag
 @app.get("/updates/{tag}")
 async def list_updates(tag: str):
@@ -45,8 +64,30 @@ async def list_updates(tag: str):
 # Ruta para descargar una versión específica de un tag
 @app.get("/updates/{tag}/{version}")
 async def download_update(tag: str, version: str):
-    """Descarga un archivo específico."""
+    updates = []
     file_path = os.path.join(UPDATE_DIR, tag, version)
+    if os.path.exists(file_path):
+
+
+
+
+        if os.path.isdir(file_path):  # Verificar que el subdirectorio exista
+            iteracionArchivos(file_path,tag, updates)
+        else: print(f"Directorio {file_path} no existe")
+        upd = updates
+        return upd
+        
+            #return FileResponse(file_path)
+    return {"error": "Archivo no encontrado"}
+
+
+
+    """Devolver diccionario con rutas a descargar."""
+# Ruta para subir un archivo de actualización
+@app.get("/updates/{tag}/{version}/{full_path:path}")
+async def download_file(tag: str, version: str, full_path: str):
+    """Descarga un archivo específico."""
+    file_path = os.path.join(UPDATE_DIR, tag, version,full_path)
     if os.path.exists(file_path):
         return FileResponse(file_path)
     return {"error": "Archivo no encontrado"}
