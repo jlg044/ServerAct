@@ -1,4 +1,4 @@
-from Lib.database import obtenerTags
+from Lib.database import *
 
 #TODAS LAS VARIABLES DEBERIAN SER CONSTANTES??????
 
