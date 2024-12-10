@@ -12,4 +12,4 @@ from updateConfig import *
 
 
 #Obtener versiones actualizadas
-verNuev = comprobarActualizacion("Vega11", "Vega22_v1.0.0")
+verNuev = comprobarActualizacion("Vega22", "Vega22_v1.0.0")
