@@ -49,7 +49,7 @@ def obtenerTags():
 def pre_subir(vers, mod, id_tag):
     
     # vers es el nombre de la version 
-    # mod es un json con los archivos modificados
+    # mod es un formato json con el nombre de los archivos modificados
     
     try:
         cur.executemany(
@@ -71,4 +71,36 @@ def pre_subir(vers, mod, id_tag):
         print(f"Error: {e}")
         
         conn.commit() 
+    
+def comprobarActualizacion(tag, versAct):
+    # Obtener ids de la version actual del robot
+    cur.execute("SELECT id FROM etiquetas WHERE etiqueta = ?", (tag,))
+    id_t = cur.fetchone()  # Usamos fetchone() porque esperamos un único resultado
+
+    if not id_t:  # Verificar si los resultados son válidos
+        print("No se encontraron registros para la etiqueta o versión")
+        return
+
+    # Comprobar si hay nuevas actualizaciones
+    cur.execute("SELECT v.* FROM versiones v "
+                "JOIN version_etiqueta ve ON v.id = ve.id_versiones "
+                "JOIN etiquetas e ON ve.id_tag = e.id WHERE e.id = ?", id_t)
+
+    versiones = cur.fetchall()  # Obtenemos todas las versiones correspondientes a la etiqueta
+    versionesNuevas = []
+
+    for vers in versiones:
+        if versAct < vers[1]:  # Comparar las versiones
+            versionesNuevas.append(vers)
+    
+    # Mostrar las versiones nuevas
+    if versionesNuevas:
+        print("Versiones nuevas encontradas:")
+        for v in versionesNuevas:
+            print(v)
+    else:
+        print("No se encontraron versiones nuevas.")
+
+    return versionesNuevas
+
     

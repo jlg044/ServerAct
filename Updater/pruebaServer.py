@@ -1,9 +1,15 @@
-from server import subTags, obtTags
+from updateConfig import *
 
+#Subir los tags
 #tag es una tupla
 #tag = "Vega22" , "Vega11"
 #subirTags(tag)
 
-tags = []
-tags = obtTags()
-print(tags)
+#Descargar los tags
+#tags = []
+#tags = obtenerTags()
+#print(tags)
+
+
+#Obtener versiones actualizadas
+verNuev = comprobarActualizacion("Vega11", "Vega22_v1.0.0")
