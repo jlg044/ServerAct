@@ -46,7 +46,7 @@ def obtenerTags():
     return tags
 
 # Comprobar archivos modificados y añadirlos al server
-def pre_subir(vers, mod):
+def pre_subir(vers, mod, id_tag):
     
     # vers es el nombre de la version 
     # mod es un json con los archivos modificados
@@ -56,8 +56,19 @@ def pre_subir(vers, mod):
             "INSERT INTO versiones (version, archivo, fecha) VALUES (?)", 
             (vers, mod, date())  # Pass list of tuples
         )
+
     except mariadb.Error as e: 
         print(f"Error: {e}")
+        conn.commit() 
+
+
+    try:
+        cur.executemany("INSERT INTO version_etiqueta (id_versiones, id_tag) VALUES (?)",
+            (cur.execute("SELECT id FROM versiones WHERE version = ?", (vers)), id_tag)
+        )
+        
+    except mariadb.Error as e: 
+        print(f"Error: {e}")
+        
+        conn.commit() 
     
-    conn.commit() 
-    print(f"Last Inserted ID: {cur.lastrowid}")
