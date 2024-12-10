@@ -1,3 +1,4 @@
+from datetime import date
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -139,6 +140,15 @@ async def upload_update(tag: str, version: str, file: UploadFile = File(...)):
         save_index(index)
 
     return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
+
+# Obtener Tags de la base de datos
+def obtTags():
+    tags = up.obtenerTags()
+    return tags
+
+# Subir Tags a la base de datos
+def subTags(tags):
+    up.subirTags(tags)
 
 if __name__ == "__main__":
     import uvicorn
