@@ -1,4 +1,4 @@
-from updateConfig import *
+from server import compAct
 
 #Subir los tags
 #tag es una tupla
@@ -12,4 +12,4 @@ from updateConfig import *
 
 
 #Obtener versiones actualizadas
-verNuev = comprobarActualizacion("Vega22", "Vega22_v1.0.0")
+verNuev = compAct("Vega22", "Vega22_v1.0.0")

@@ -46,7 +46,7 @@ def obtenerTags():
     return tags
 
 # Comprobar archivos modificados y añadirlos al server
-def pre_subir(vers, mod, id_tag):
+def subirVersion(vers, mod, id_tag):
     
     # vers es el nombre de la version 
     # mod es un formato json con el nombre de los archivos modificados
@@ -97,10 +97,30 @@ def comprobarActualizacion(tag, versAct):
     if versionesNuevas:
         print("Versiones nuevas encontradas:")
         for v in versionesNuevas:
-            print(v)
+            print(v[1])
     else:
         print("No se encontraron versiones nuevas.")
 
-    return versionesNuevas
+    respuesta = input("¿Quieres descargarlas actualizaciones? (s/n): ").strip().lower()
+    if respuesta in ['s', 'n', '']:
+        if respuesta == 's' or respuesta == '':
+            print("Iniciando la descarga...")
+            cambios = descargarActualizaciones(versionesNuevas)
+        else:
+            print("Descarga cancelada.")
+    else:
+        print("Respuesta no válida. Por favor, ingresa 'S' para sí o 'n' para no.")
 
-    
+    return cambios
+
+def descargarActualizaciones(versionesNuevas):
+    cambios = ""
+    for version in versionesNuevas:
+        cur.execute("SELECT cambios FROM versiones WHERE version =?", (version[1],))
+        json = cur.fetchall()  # Obtenemos los archivos que hay que descargar
+        for j in json:
+            cambios += ''.join(map(str, json))
+            cambios += '\n\n' 
+    print(cambios) #Hasta aquí funciona
+
+    return cambios

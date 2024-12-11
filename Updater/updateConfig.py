@@ -1,4 +1,4 @@
-from Lib.database import *
+from database import *
 
 #TODAS LAS VARIABLES DEBERIAN SER CONSTANTES??????
 
