@@ -33,13 +33,15 @@ def get_server_updates(modelo):
         return []
 
 def get_last_version(versiones_server):
-
+    if versiones_server == []:
+        return None
     # Crear una lista de pares (original, Version)
     parsed_versions = [(v, (v.split('v')[1])) for v in versiones_server]
     # Ordenar por la versión (segundo elemento del par)
     parsed_versions.sort(key=lambda x: x[1], reverse=True)
     # Retornar la versión original que sea la última
-    return parsed_versions[0][0]
+    ultimaVersion = parsed_versions[0][0]
+    return ultimaVersion
 
 def iteracionArchivos(dir,tag,updates):
 
@@ -63,41 +65,35 @@ def iteracionArchivos(dir,tag,updates):
 
 
 # Función para descargar un archivo del servidor
-def download_file(modelo, version):
-    url = os.path.join(up.urlServer, modelo, version).replace('\\','/')
-    # Crear la ruta completa para guardar el archivo en su carpeta correspondiente
-    local_path = os.path.join(DOWNLOAD_DIR, modelo, version)
-    
+def download_file(modelo, version, path, filename):
+    urlPath = os.path.join(up.urlServer, modelo, version, path,).replace('\\','/')
+    urlFilePath = os.path.join(urlPath, filename).replace('\\','/')
+
     # Asegurar que la carpeta correspondiente exista
-    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+    os.makedirs(os.path.dirname(urlFilePath), exist_ok=True)
     
     try:
-        response = requests.get(url, stream=True)  # Usar stream=True para archivos grandes
+        response = requests.get(urlFilePath, stream=True)  # Usar stream=True para archivos grandes
         if response.status_code == 200:
-            with open(local_path, 'wb') as file:
+            with open(urlFilePath, 'wb') as file:
                 for chunk in response.iter_content(chunk_size=8192):  # Escribir en partes
                     file.write(chunk)
-            print(f"Archivo {version} descargado correctamente en {local_path}.")
+            print(f"Archivo {version} descargado correctamente en {urlFilePath}.")
         else:
             print(f"Error al descargar {modelo}-{version}: {response.text}")
     except requests.RequestException as e:
         print(f"Error al conectar con el servidor: {e}")
 
-
-
-
-
 # Función principal para sincronizar archivos
-def sync_updates(modelo):
+def download_lastVersionComplete(modelo):
 
     print(f"Sincronizando archivos para el modelo {modelo}...")
     server_versions = get_server_updates(modelo)
     print(f"La ultima version para el modelo {modelo} es la version {get_last_version(server_versions)}")
     ultimaVersion = get_last_version(server_versions)
-    
-    if not server_versions:
+    if ultimaVersion is None:
         print(f"No se encontraron archivos en el servidor para el tag {modelo}.")
-        return
+        return None
     
 
     urlServerUltimaVersion = os.path.join(up.urlServer, modelo, ultimaVersion).replace('\\','/')
@@ -121,28 +117,40 @@ def sync_updates(modelo):
     except requests.RequestException as e:
         print(f"Error al conectar con el servidor: {e}")
 
-
     
-    #Recreacion del directorio local.
-    local_files = []
-    actualDir = os.path.join(DOWNLOAD_DIR, modelo)
-    if os.path.isdir(actualDir):  # Verificar que el subdirectorio exista
-        iteracionArchivos(actualDir,modelo,local_files)
-    else: print(f"Directorio {actualDir} no existe")
+    for update in updates:
+        interPath = update["path"].split("\\")
+        i = 0
+        inter=""
 
-    modelo_dir = os.path.join(DOWNLOAD_DIR, modelo)
+        for paths in interPath:
 
-    # Descargar solo las versiones faltantes
-    for version in server_versions:
-        if version not in local_files:
-            print(f"Descargando archivo faltante: {version}")
-            download_file(modelo, version)
-        else:
-            print(f"Archivo ya existe localmente: {version}")
+            if i!=0:
+                inter = os.path.join(inter, paths).replace('\\','/')
+            i = i+1
+        os.makedirs(os.path.join(up.DOWNLOAD_DIR, inter).replace('\\','/'), exist_ok=True)
+        urlFile = os.path.join(up.urlServer, inter,update['filename']).replace('\\','/')
+        try:
+            # Enviar solicitud GET al servidor
+            response = requests.get(urlFile, stream=True)
+            
+            if response.status_code == 200:
+                # Descargar y guardar el archivo en bloques
+                with open(os.path.join(up.DOWNLOAD_DIR, inter,update["filename"]).replace('\\','/'), "wb") as archivo_local:
+                    for chunk in response.iter_content(chunk_size=8192):  # Leer en bloques de 8 KB
+                        if chunk:
+                            archivo_local.write(chunk)
+                print(f"Archivo descargado correctamente en {update['path']}")
+            else:
+                print(f"\n\nError al consultar el archivo del servidor para {urlFile}: {response.text}\n\n")
+                return False
+        except requests.RequestException as e:
+            print(f"\n\nError al conectar con el servidor: {e}\n\n")
+            return False
 
 
 def updater():
-    sync_updates(versionActual["modelo"])
+    download_lastVersionComplete(versionActual["modelo"])
     print("Completado")
 
 #def updater(modelo):

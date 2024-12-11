@@ -5,9 +5,9 @@ from datetime import date
 #Conexión a la base de datos
 try:
     conn = mariadb.connect(
-        user="root",
+        user="mario",
         password="1881",
-        host="localhost",
+        host="10.0.60.28",
         port=3306,
         database="servact"
 
