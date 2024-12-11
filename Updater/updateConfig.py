@@ -1,7 +1,9 @@
+from database import *
+
 #TODAS LAS VARIABLES DEBERIAN SER CONSTANTES??????
 
 #Configuración server
-urlServer = "http://127.0.0.1:8000/updates"
+urlServer = "http://127.0.0.1:8000/"
 
 #Configuración etiquetas de versiones VEGA
 etiquetaVersion = {"Vega11","Vega22"}
@@ -13,5 +15,5 @@ DOWNLOAD_DIR = './Downloads'
 VERSION_DIR = "./version.json"
 
 #Directorio destino a la hora de descargar la ultima version del servidor
-UPDATE_DIR = './updatesloc'
+UPDATE_DIR = 'updatesloc/'
 
