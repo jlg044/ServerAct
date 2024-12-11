@@ -1,6 +1,7 @@
 import mariadb
 import sys
 from datetime import date
+import json
 
 #Conexión a la base de datos
 try:
@@ -114,13 +115,26 @@ def comprobarActualizacion(tag, versAct):
     return cambios
 
 def descargarActualizaciones(versionesNuevas):
-    cambios = ""
-    for version in versionesNuevas:
-        cur.execute("SELECT cambios FROM versiones WHERE version =?", (version[1],))
-        json = cur.fetchall()  # Obtenemos los archivos que hay que descargar
-        for j in json:
-            cambios += ''.join(map(str, json))
-            cambios += '\n\n' 
-    print(cambios) #Hasta aquí funciona
+    data = {}  # Diccionario para almacenar todos los JSONs
 
-    return cambios
+    for version in versionesNuevas:
+        # Ejecutar la consulta para obtener los cambios relacionados con la versión
+        cur.execute("SELECT cambios FROM versiones WHERE version =?", (version[1],))
+        json_resultados = cur.fetchall()  # Obtener los resultados de los cambios
+        
+        for j in json_resultados:
+            # Verificar que j no sea None
+            if j:
+                # Limpiar la cadena y convertir a un diccionario
+                json_string = j[0].strip()
+                try:
+                    json_data = json.loads(json_string)  # Convertir cadena JSON a diccionario
+                    # Fusionar JSON al diccionario utilizando el valor de la versión como clave
+                    if version[1] in data:
+                        data[version[1]].update(json_data)
+                    else:
+                        data[version[1]] = json_data  # Si la clave no existe, crearla
+                except json.JSONDecodeError as e:
+                    print(f"Error al procesar JSON: {str(e)}")
+
+    return data

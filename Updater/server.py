@@ -151,8 +151,8 @@ def subTags(tags):
     up.subirTags(tags)
 
 def compAct(tag, versAct):
-    cambios = up.comprobarActualizacion(tag, versAct)
-    download_file(cambios)
+    cambios = up.comprobarActualizacion(tag, versAct)    
+    return cambios
 
 if __name__ == "__main__":
     import uvicorn
