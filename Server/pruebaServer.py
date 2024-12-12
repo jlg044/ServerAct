@@ -23,7 +23,7 @@ def verNuevo():
     print(cambios)
     
     # Iterar sobre cada versión en el diccionario
-    for version, data in cambios.items():
+    for data in cambios.items():
         tag = data.get('tag', '')
         print(f"Tag: {tag}")
         

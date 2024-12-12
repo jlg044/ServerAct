@@ -7,8 +7,6 @@ import json
 
 # Lista para almacenar las actualizaciones
 url = up.urlServer
-updates = []
-modelos = up.etiquetaVersion
 cambios = []
 
 
@@ -30,17 +28,20 @@ def tojson(cambios):
     print(f"El diccionario se ha guardado correctamente en {ruta_archivo}")
 
 # Especificar los tags que deseas buscar
-def deftags(nomb):
+def deftags(model):
     
-    for tag in nomb:
-        tag_dir = os.path.join(path, tag)
-        if os.path.isdir(tag_dir):  # Verificar que el subdirectorio exista
-            iteracionArchivos(tag_dir,tag)
-        else: print(f"Directorio {tag_dir} no existe")
 
-def iteracionArchivos(dir,tag):
-    print(dir)
-    global updates
+        version_dir = os.path.join(path)
+        if os.path.isdir(version_dir):  # Verificar que el subdirectorio exista
+            iteracionArchivos(version_dir,model)
+        else: print(f"Directorio {version_dir} no existe")
+
+def getModel():
+    pathModel = path.replace('\\', '/').split("/")
+    pathModel = pathModel[-1].split("_")
+    return pathModel[0]
+
+def iteracionArchivos(dir,tag,updates):
     
     for filename in os.listdir(dir): #Para cada archivo en el directorio
 
@@ -58,7 +59,7 @@ def iteracionArchivos(dir,tag):
             })
 
 def getLastVersion(update):
-        #Obtener la ultima version del programa.
+    #Obtener la ultima version del programa desde el servidor.
     url = os.path.join(up.urlServer, update["tag"]).replace('\\','/')
     try:
         response = requests.get(url)
@@ -70,8 +71,10 @@ def getLastVersion(update):
     except requests.RequestException as e:
         print(f"Error al conectar con el servidor: {e}")
         return []
+    
     if versiones_server == []:
         return None
+    
     # Crear una lista de pares (original, Version)
     parsed_versions = [(v, (v.split('v')[1])) for v in versiones_server]
     # Ordenar por la versión (segundo elemento del par)
@@ -173,16 +176,13 @@ def upload_file(update):
 
     file_name = update["filename"]
     localPath = update["path"]
+    modelo = update["tag"]
 
-    for modelo in modelos:
-        indice = localPath.find(modelo)
-        if indice != -1:
-            filePath = localPath[indice:]  # Extraer la subruta desde el modelo encontrado
-            break  # Detener la búsqueda después del primer hallazgo
-    
+    indice = localPath.find(modelo)
+    if indice != -1:
+        filePath = localPath[indice:]  # Extraer la subruta desde el modelo encontrado
 
     urlFile = os.path.join(url, filePath).replace('\\','/')
-
 
     try:
         # Construir la ruta completa al archivo
@@ -220,12 +220,20 @@ if __name__ == '__main__':
         path += '/'
     if not os.path.exists(path):
         raise Exception('No existe el directorio')
+   
+    #Esto se usa? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     files = [file for file in os.listdir(path)]
     if not files:
         raise Exception('No hay archivos en el directorio')
     
-    # Inicializar tags y llenar updates
-    deftags(up.etiquetaVersion)
+    model = getModel()
+    
+    #REVISAR ESTA PARTEEE
+    updates = []
+    version_dir = os.path.join(path)
+    if os.path.isdir(version_dir):  # Verificar que el subdirectorio exista
+        iteracionArchivos(version_dir,model,updates)
+    else: print(f"Directorio {version_dir} no existe")
 
     # Subir todos los archivos de la lista de actualizaciones
     for update in updates:

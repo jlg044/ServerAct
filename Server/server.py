@@ -4,7 +4,6 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
 import Updater.updateConfig as up
-import Updater.database as db
 
 #Main
 
@@ -30,11 +29,13 @@ if __name__ == "__main__":
 @app.get("/updates/{tag}")
 async def list_updates(tag: str):
     """Devuelve todas las versiones disponibles para un tag."""
-    tag_dir = os.path.join(UPDATE_DIR, tag)
-    if os.path.isdir(tag_dir):
-        versions = os.listdir(tag_dir)
-        return versions
-    return []
+    versiones = listVersions(tag)
+    
+    #tag_dir = os.path.join(UPDATE_DIR, tag)
+    #if os.path.isdir(tag_dir):
+    #    versions = os.listdir(tag_dir)
+    #    return versions
+    #return []
 
 # Ruta para descargar una versión específica de un tag
 @app.get("/updates/{tag}/{version}")
@@ -42,8 +43,6 @@ async def download_update(tag: str, version: str):
     updates = []
     file_path = os.path.join(UPDATE_DIR, tag, version)
     if os.path.exists(file_path):
-
-
 
 
         if os.path.isdir(file_path):  # Verificar que el subdirectorio exista
@@ -125,13 +124,13 @@ def iteracionArchivos(dir,tag,updates):
 
 # Obtener Tags de la base de datos
 def obtTags():
-    tags = db.obtenerTags()
+    tags = up.obtenerTags()
     return tags
 
 # Subir Tags a la base de datos
 def subTags(tags):
-    db.subirTags(tags)
+    up.subirTags(tags)
 
 def compAct(tag, versAct):
-    cambios = db.comprobarActualizacion(tag, versAct)    
+    cambios = up.comprobarActualizacion(tag, versAct)    
     return cambios
