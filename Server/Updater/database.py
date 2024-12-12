@@ -46,9 +46,8 @@ def subirTags(tags):
     conn.commit() 
     print(f"Last Inserted ID: {cur.lastrowid}")
 
-# Comprobar archivos modificados y añadirlos al server
-def subirVersion(vers, mod, id_tag):
-    
+# Añadir al server los archivos modificados
+def subirVersion(vers, mod):
     # vers es el nombre de la version 
     # mod es un formato json con el nombre de los archivos modificados
     
@@ -60,8 +59,13 @@ def subirVersion(vers, mod, id_tag):
 
     except mariadb.Error as e: 
         print(f"Error: {e}")
-        conn.commit() 
 
+    conn.commit() 
+
+    #Subir la relacion de la nueva etiqueta con su tag.
+    tagArray = vers.split("_")
+
+    id_tag = ObtenerIdTag(tagArray[0])
 
     try:
         cur.executemany("INSERT INTO version_etiqueta (id_versiones, id_tag) VALUES (?)",
@@ -71,11 +75,22 @@ def subirVersion(vers, mod, id_tag):
     except mariadb.Error as e: 
         print(f"Error: {e}")
         
-        conn.commit() 
+    conn.commit() 
     
 #------------------------------------------------------------------------------------------------------------#
 
 # Downloads Tools
+
+def ObtenerIdTag(tag):
+    cur.execute("SELECT id FROM etiquetas WHERE etiqueta = ?", (tag,))
+    id_tag = cur.fetchone()  # Usamos fetchone() porque esperamos un único resultado
+
+    if id_tag == None:
+        subirTags(tag)
+        cur.execute("SELECT id FROM etiquetas WHERE etiqueta = ?", (tag,))
+        id_tag = cur.fetchone()  # Usamos fetchone() porque esperamos un único resultado
+
+    return id_tag
 
 # Obtiene los tags que se encuentran en la base de datos
 def obtenerTags():
@@ -85,14 +100,10 @@ def obtenerTags():
         tags.append(etiqueta[0])  # Append the first element of the row (the tag)
     return tags
 
-def comprobarActualizacion(tag, versAct):
-    # Obtener ids de la version actual del robot
-    cur.execute("SELECT id FROM etiquetas WHERE etiqueta = ?", (tag,))
-    id_t = cur.fetchone()  # Usamos fetchone() porque esperamos un único resultado
-
-    if not id_t:  # Verificar si los resultados son válidos
-        print("No se encontraron registros para la etiqueta o versión")
-        return
+#Obtiene las versiones que se encuentran en el servidor para un tag concreto
+def listVersions(tag):
+    version = []  # Initialize a list to store tags
+    id_t = ObtenerIdTag(tag)
 
     # Comprobar si hay nuevas actualizaciones
     cur.execute("SELECT v.* FROM versiones v "
@@ -100,7 +111,18 @@ def comprobarActualizacion(tag, versAct):
                 "JOIN etiquetas e ON ve.id_tag = e.id WHERE e.id = ?", id_t)
 
     versiones = cur.fetchall()  # Obtenemos todas las versiones correspondientes a la etiqueta
+
+    for vers in versiones:
+        version.append(vers)
+
+    return version
+
+#Comprueba si hay actualizaciones
+def comprobarActualizacion(tag, versAct):
     versionesNuevas = []
+    
+    # Obtener ids de la version actual del robot   
+    versiones = listVersions(tag)
 
     for vers in versiones:
         if versAct < vers[1]:  # Comparar las versiones
@@ -118,7 +140,7 @@ def comprobarActualizacion(tag, versAct):
     if respuesta in ['s', 'n', '']:
         if respuesta == 's' or respuesta == '':
             print("Iniciando la descarga...")
-            cambios = descargarActualizaciones(versionesNuevas)
+            cambios = ObtenerJsonVersiones(versionesNuevas)
         else:
             print("Descarga cancelada.")
             return 0
@@ -127,7 +149,8 @@ def comprobarActualizacion(tag, versAct):
 
     return cambios
 
-def descargarActualizaciones(versionesNuevas):
+#Obtiene el json de las versiones disponibles para actualizar
+def ObtenerJsonVersiones(versionesNuevas):
     data = {}  # Diccionario para almacenar todos los JSONs
 
     for version in versionesNuevas:
