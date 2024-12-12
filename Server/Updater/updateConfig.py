@@ -15,5 +15,5 @@ DOWNLOAD_DIR = './Robot/Downloads'
 VERSION_DIR = "./version.json"
 
 #Directorio destino a la hora de descargar la ultima version del servidor
-UPDATE_DIR = '/updatesloc'
+UPDATE_DIR = '/Server/updatesloc'
 
