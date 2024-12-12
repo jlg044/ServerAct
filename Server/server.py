@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 import Updater.updateConfig as up
 import hashlib
+import Updater.database as db
 
 #Main
 
@@ -30,7 +31,9 @@ if __name__ == "__main__":
 @app.get("/updates/{tag}")
 async def list_updates(tag: str):
     """Devuelve todas las versiones disponibles para un tag."""
-    versiones = listVersions(tag)
+    versiones = []
+    versiones = db.listVersions(tag)
+    return versiones
     
     #tag_dir = os.path.join(UPDATE_DIR, tag)
     #if os.path.isdir(tag_dir):
@@ -143,13 +146,13 @@ def HashCreator(archivo):
 
 # Obtener Tags de la base de datos
 def obtTags():
-    tags = up.obtenerTags()
+    tags = db.obtenerTags()
     return tags
 
 # Subir Tags a la base de datos
 def subTags(tags):
-    up.subirTags(tags)
+    db.subirTags(tags)
 
 def compAct(tag, versAct):
-    cambios = up.comprobarActualizacion(tag, versAct)    
+    cambios = db.comprobarActualizacion(tag, versAct)    
     return cambios
