@@ -3,7 +3,10 @@ import sys
 from datetime import date
 import json
 
-#Conexión a la base de datos
+#------------------------------------------------------------------------------------------------------------#
+
+#Conexion to the database
+
 try:
     conn = mariadb.connect(
         user="mario",
@@ -19,6 +22,10 @@ except mariadb.Error as e:
 
 # Get Cursor
 cur = conn.cursor()
+
+#------------------------------------------------------------------------------------------------------------#
+
+# Uploads Tools
 
 # Añadir etiquetas a la base de datos
 def subirTags(tags):
@@ -73,6 +80,10 @@ def subirVersion(vers, mod, id_tag):
         
         conn.commit() 
     
+#------------------------------------------------------------------------------------------------------------#
+
+# Downloads Tools
+
 def comprobarActualizacion(tag, versAct):
     # Obtener ids de la version actual del robot
     cur.execute("SELECT id FROM etiquetas WHERE etiqueta = ?", (tag,))
