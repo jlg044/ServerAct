@@ -2,6 +2,7 @@ import mariadb
 import sys
 from datetime import date
 import json
+import Updater.updateConfig as up
 
 #------------------------------------------------------------------------------------------------------------#
 
@@ -9,11 +10,11 @@ import json
 
 try:
     conn = mariadb.connect(
-        user="mario",
-        password="1881",
-        host="10.0.60.28",
-        port=3306,
-        database="servact"
+        user= up.UserDB,
+        password=up.PasswordDB,
+        host=up.hostDB,
+        port=up.PortDB,
+        database=up.DB
 
     )
 except mariadb.Error as e:
@@ -45,14 +46,6 @@ def subirTags(tags):
     conn.commit() 
     print(f"Last Inserted ID: {cur.lastrowid}")
 
-# Obtiene los tags que se encuentran en la base de datos
-def obtenerTags():
-    tags = []  # Initialize a list to store tags
-    cur.execute("SELECT etiqueta FROM etiquetas")
-    for etiqueta in cur:
-        tags.append(etiqueta[0])  # Append the first element of the row (the tag)
-    return tags
-
 # Comprobar archivos modificados y añadirlos al server
 def subirVersion(vers, mod, id_tag):
     
@@ -83,6 +76,14 @@ def subirVersion(vers, mod, id_tag):
 #------------------------------------------------------------------------------------------------------------#
 
 # Downloads Tools
+
+# Obtiene los tags que se encuentran en la base de datos
+def obtenerTags():
+    tags = []  # Initialize a list to store tags
+    cur.execute("SELECT etiqueta FROM etiquetas")
+    for etiqueta in cur:
+        tags.append(etiqueta[0])  # Append the first element of the row (the tag)
+    return tags
 
 def comprobarActualizacion(tag, versAct):
     # Obtener ids de la version actual del robot

@@ -1,4 +1,3 @@
-from Updater.database import *
 
 #TODAS LAS VARIABLES DEBERIAN SER CONSTANTES??????
 
@@ -16,4 +15,15 @@ VERSION_DIR = "./version.json"
 
 #Directorio destino a la hora de descargar la ultima version del servidor
 UPDATE_DIR = '/Server/updatesloc'
+
+#Iniciar sesion en la base de datos
+UserDB = "mario"
+
+PasswordDB = "1881"
+
+hostDB = "10.0.60.28"
+
+PortDB = 3306
+
+DB = "servact"
 
