@@ -172,7 +172,7 @@ def HashCreator(archivo):
 
 
 # Función para subir archivos al servidor
-def upload_file(update):
+def upload_file(update, end=False):
 
     file_name = update["filename"]
     localPath = update["path"]
@@ -240,6 +240,9 @@ if __name__ == '__main__':
         filesComparator(update)
     tojson(cambios)
     for update in updates:
+        if (update == updates[-1]):
+            upload_file(update,end = True)
+            break
         upload_file(update)
     print(cambios)
     
