@@ -19,15 +19,14 @@ def verNuevo():
     cambios = sv.compAct("Vega22", "Vega22_v1.0.0")
     if(cambios == 0):
         return "No se ha descargado nada"
-    print("Cambios encontrados:")
-    print(cambios)
     
     # Iterar sobre cada versión en el diccionario
-    for version, data in cambios.items():
+    for version, data in reversed(cambios.items()):
+        print("\n\n")
         tag = data.get('tag', '')
         print(f"Tag: {tag}")
         
-        version_num = data.get('path', '').split('/')[1]  # Extraer el número de versión del path
+        version_num = version  # Extraer el número de versión del path
         print(f"Versión: {version_num}")
         
         filename = data.get('filename', '')

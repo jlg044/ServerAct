@@ -85,14 +85,10 @@ def obtenerTags():
         tags.append(etiqueta[0])  # Append the first element of the row (the tag)
     return tags
 
-def comprobarActualizacion(tag, versAct):
-    # Obtener ids de la version actual del robot
+def listVersions(tag):
+    version = []  # Initialize a list to store tags
     cur.execute("SELECT id FROM etiquetas WHERE etiqueta = ?", (tag,))
     id_t = cur.fetchone()  # Usamos fetchone() porque esperamos un único resultado
-
-    if not id_t:  # Verificar si los resultados son válidos
-        print("No se encontraron registros para la etiqueta o versión")
-        return
 
     # Comprobar si hay nuevas actualizaciones
     cur.execute("SELECT v.* FROM versiones v "
@@ -100,7 +96,18 @@ def comprobarActualizacion(tag, versAct):
                 "JOIN etiquetas e ON ve.id_tag = e.id WHERE e.id = ?", id_t)
 
     versiones = cur.fetchall()  # Obtenemos todas las versiones correspondientes a la etiqueta
+
+    for vers in versiones:
+        version.append(vers)
+
+    return version
+
+#Comprueba si hay actualizaciones
+def comprobarActualizacion(tag, versAct):
     versionesNuevas = []
+    
+    # Obtener ids de la version actual del robot   
+    versiones = listVersions(tag)
 
     for vers in versiones:
         if versAct < vers[1]:  # Comparar las versiones
