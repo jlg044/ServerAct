@@ -3,56 +3,29 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
-import json
 import updateConfig as up
+
+#Main
 
 app = FastAPI()
 
-# Directorio donde se almacenarán las actualizaciones
+#Directorio donde se almacenarán las actualizaciones
 UPDATE_DIR = up.UPDATE_DIR
 os.makedirs(UPDATE_DIR, exist_ok=True)
 
 # Montar directorio estático para servir archivos
-app.mount("/updatesloc", StaticFiles(directory=UPDATE_DIR), name="static")
-
-# Archivo de índice para registrar versiones
-INDEX_FILE = os.path.join(UPDATE_DIR, "index.json")
-
-# Inicializar el archivo de índice si no existe
-if not os.path.exists(INDEX_FILE):
-    with open(INDEX_FILE, 'w') as f:
-        json.dump({}, f)
-
-# Cargar índice desde archivo
-def load_index():
-    with open(INDEX_FILE, 'r') as f:
-        return json.load(f)
-
-# Guardar índice en archivo
-def save_index(index):
-    with open(INDEX_FILE, 'w') as f:
-        json.dump(index, f, indent=4)
+app.mount(UPDATE_DIR, StaticFiles(directory=UPDATE_DIR), name="static")
 
 
-def iteracionArchivos(dir,tag,updates):
-    
-    for filename in os.listdir(dir): #Para cada archivo en el directorio
-
-        if os.path.isdir(os.path.join(dir, filename)):
-
-            iteracionArchivos(os.path.join(dir, filename),tag,updates)
-                # Recorrer archivos en el subdirectorio
-                # Añadir el tag y el nombre completo del archivo
-        else:
-            updates.append(
-
-            {"tag": tag, 
-            "path": dir,
-            "filename": filename
-            })
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
 
 
-# Ruta para listar las versiones disponibles para un tag
+#Conections
+    #Get Zone
+
+    # Ruta para listar las versiones disponibles para un tag
 @app.get("/updates/{tag}")
 async def list_updates(tag: str):
     """Devuelve todas las versiones disponibles para un tag."""
@@ -93,6 +66,9 @@ async def download_file(tag: str, version: str, full_path: str):
         return FileResponse(file_path)
     return {"error": "Archivo no encontrado"}
 
+
+    #Put Zone
+
 # Ruta para subir un archivo de actualización
 @app.put("/updates/{tag}/{version}/{full_path:path}")
 async def upload_update(tag: str, version: str, full_path: str, file: UploadFile = File(...)):
@@ -106,14 +82,6 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
     # Guardar el archivo subido
     with open(file_path, "wb") as f:
         f.write(await file.read())
-
-    # Actualizar el índice (opcional, ya que ahora usamos carpetas)
-    index = load_index()
-    if tag not in index:
-        index[tag] = []
-    if version not in index[tag]:
-        index[tag].append(version)
-        save_index(index)
 
     return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
 
@@ -131,15 +99,28 @@ async def upload_update(tag: str, version: str, file: UploadFile = File(...)):
     with open(file_path, "wb") as f:
         f.write(await file.read())
 
-    # Actualizar el índice (opcional, ya que ahora usamos carpetas)
-    index = load_index()
-    if tag not in index:
-        index[tag] = []
-    if version not in index[tag]:
-        index[tag].append(version)
-        save_index(index)
-
     return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
+
+
+#Utilities Tools
+
+#Iterar directorios para guardar todos los archivos en UPDATES.
+def iteracionArchivos(dir,tag,updates):
+    
+    for filename in os.listdir(dir): #Para cada archivo en el directorio
+
+        if os.path.isdir(os.path.join(dir, filename)):
+
+            iteracionArchivos(os.path.join(dir, filename),tag,updates)
+                # Recorrer archivos en el subdirectorio
+                # Añadir el tag y el nombre completo del archivo
+        else:
+            updates.append(
+
+            {"tag": tag, 
+            "path": dir,
+            "filename": filename
+            })
 
 # Obtener Tags de la base de datos
 def obtTags():
@@ -153,7 +134,3 @@ def subTags(tags):
 def compAct(tag, versAct):
     cambios = up.comprobarActualizacion(tag, versAct)    
     return cambios
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
