@@ -1,4 +1,4 @@
-from database import *
+from Updater.database import *
 
 #TODAS LAS VARIABLES DEBERIAN SER CONSTANTES??????
 
@@ -9,7 +9,7 @@ urlServer = "http://127.0.0.1:8000/"
 etiquetaVersion = {"Vega11","Vega22"}
 
 #Configuracion de descarga
-DOWNLOAD_DIR = './Downloads'
+DOWNLOAD_DIR = './Robot/Downloads'
 
 #Directorio del archivo json de version del Robot VEGA
 VERSION_DIR = "./version.json"

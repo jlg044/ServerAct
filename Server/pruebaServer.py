@@ -1,5 +1,5 @@
 import server as sv
-import updateConfig as up
+import Updater.updateConfig as up
 import os
 import requests
 
@@ -17,6 +17,8 @@ import requests
 #Obtener versiones actualizadas
 def verNuevo():
     cambios = sv.compAct("Vega22", "Vega22_v1.0.0")
+    if(cambios == 0):
+        return "No se ha descargado nada"
     print("Cambios encontrados:")
     print(cambios)
     

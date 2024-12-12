@@ -3,7 +3,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
-import updateConfig as up
+import Updater.updateConfig as up
 
 #Main
 

@@ -120,6 +120,7 @@ def comprobarActualizacion(tag, versAct):
             cambios = descargarActualizaciones(versionesNuevas)
         else:
             print("Descarga cancelada.")
+            return 0
     else:
         print("Respuesta no válida. Por favor, ingresa 'S' para sí o 'n' para no.")
 
