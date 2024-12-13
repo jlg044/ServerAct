@@ -19,7 +19,7 @@ def verNuevo():
     cambios = sv.compAct("Vega22", "Vega22_v1.0.0")
     if(cambios == 0):
         return "No se ha descargado nada"
-    
+
     # Iterar sobre cada versión en el diccionario
     for version, data in reversed(cambios.items()):
         print("\n\n")

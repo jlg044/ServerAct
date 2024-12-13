@@ -4,7 +4,6 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
 import Updater.updateConfig as up
-import hashlib
 import Updater.database as db
 
 #Main
@@ -125,24 +124,6 @@ def iteracionArchivos(dir,tag,updates):
             "path": dir,
             "filename": filename
             })
-
-def HashCreator(archivo):
-    """
-    Calcula el hash de un archivo utilizando el algoritmo indicado.
-    :param archivo: Ruta del archivo
-    :param metodo: Algoritmo de hash (por defecto SHA-256)
-    :return: Hash del archivo en formato hexadecimal
-    """
-
-    hash_func = hashlib.sha256()  # Puedes cambiar a otro algoritmo como md5 o sha1
-    try:
-        with open(archivo, "rb") as f:  # Asegúrate de leer en modo binario
-            while chunk := f.read(8192):  # Leer en bloques de 8 KB
-                hash_func.update(chunk)
-        return hash_func.hexdigest()  # Devuelve el hash en formato hexadecimal
-    except FileNotFoundError:
-        return None
-
 
 # Obtener Tags de la base de datos
 def obtTags():

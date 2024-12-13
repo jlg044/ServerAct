@@ -47,14 +47,14 @@ def subirTags(tags):
     print(f"Last Inserted ID: {cur.lastrowid}")
 
 # Añadir al server los archivos modificados
-def subirVersion(vers, mod):
+def subirVersion(vers, camb):
     # vers es el nombre de la version 
-    # mod es un formato json con el nombre de los archivos modificados
+    # camb es un formato json con el nombre de los archivos cambificados
     
     try:
         cur.executemany(
             "INSERT INTO versiones (version, archivo, fecha) VALUES (?)", 
-            (vers, mod, date())  # Pass list of tuples
+            (vers, camb, date())  # Pass list of tuples
         )
 
     except mariadb.Error as e: 
