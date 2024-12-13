@@ -27,15 +27,6 @@ def tojson(cambios):
 
     print(f"El diccionario se ha guardado correctamente en {ruta_archivo}")
 
-# Especificar los tags que deseas buscar
-def deftags(model):
-    
-
-        version_dir = os.path.join(path)
-        if os.path.isdir(version_dir):  # Verificar que el subdirectorio exista
-            iteracionArchivos(version_dir,model)
-        else: print(f"Directorio {version_dir} no existe")
-
 def getModel():
     pathModel = path.replace('\\', '/').split("/")
     pathModel = pathModel[-1].split("_")
@@ -236,9 +227,9 @@ if __name__ == '__main__':
     else: print(f"Directorio {version_dir} no existe")
 
     # Subir todos los archivos de la lista de actualizaciones
-    for update in updates:
-        filesComparator(update)
-    tojson(cambios)
+    #for update in updates:
+    #    filesComparator(update)
+    #tojson(cambios)
     for update in updates:
         if (update == updates[-1]):
             upload_file(update,end = True)

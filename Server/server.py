@@ -89,8 +89,8 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
     with open(file_path, "wb") as f:
         f.write(await file.read())
     filesComparator(tag,file.filename,full_path)
-    if(end=True):
-        insertUploadOnDB(tag,version)
+    if(end==True):
+        insertUploadOnDB(version)
     return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
 
 
@@ -130,6 +130,9 @@ def iteracionArchivos(dir,tag,updates):
             "path": dir,
             "filename": filename
             })
+
+def insertUploadOnDB(version):
+    db.subirVersion(version, cambios)
 
 def filesComparator(tag,filename,path):
 
