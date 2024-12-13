@@ -83,6 +83,7 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
     os.makedirs(target_path, exist_ok=True)
 
     file_path = os.path.join(target_path, file.filename)
+    global cambios
     
 
     # Guardar el archivo subido
@@ -91,6 +92,8 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
     filesComparator(tag,file.filename,full_path)
     if(end==True):
         insertUploadOnDB(version)
+        cambios = []
+
     return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
 
 
