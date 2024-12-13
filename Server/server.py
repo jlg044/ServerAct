@@ -9,6 +9,7 @@ import Updater.database as db
 #Main
 
 app = FastAPI()
+cambios = []
 
 #Directorio donde se almacenarán las actualizaciones
 UPDATE_DIR = up.UPDATE_DIR
@@ -73,20 +74,27 @@ async def download_file(tag: str, version: str, full_path: str):
     #Put Zone
 
 # Ruta para subir un archivo de actualización
-@app.put("/updates/{tag}/{version}/{full_path:path}")
-async def upload_update(tag: str, version: str, full_path: str, file: UploadFile = File(...)):
+@app.put("/updates/{tag}/{version}/{full_path:path}",end=False)
+async def upload_update(tag: str, version: str, full_path: str, file: UploadFile = File(...), end: bool=False):
 
     """Sube un archivo al servidor y lo organiza por carpetas según el tag."""
     target_path = os.path.join(UPDATE_DIR, tag, version, full_path)
     os.makedirs(target_path, exist_ok=True)
 
     file_path = os.path.join(target_path, file.filename)
+    global cambios
     
+
     # Guardar el archivo subido
     with open(file_path, "wb") as f:
         f.write(await file.read())
+    filesComparator(tag,file.filename,full_path)
+    if(end==True):
+        insertUploadOnDB(version)
+        cambios = []
 
     return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
+
 
 # Ruta para subir un archivo de actualización
 @app.put("/updates/{tag}/{version}")
@@ -124,6 +132,70 @@ def iteracionArchivos(dir,tag,updates):
             "path": dir,
             "filename": filename
             })
+
+def insertUploadOnDB(version):
+    db.subirVersion(version, cambios)
+
+def filesComparator(tag,filename,path):
+
+    #Get ultima version
+    ultimaVersion = db.listVersions(tag).reverse()
+    ultimaVersion = reversed(ultimaVersion)
+    ultimaVersion = ultimaVersion[1]
+    nuevaVersion = ultimaVersion[0]
+
+    if ultimaVersion is None:
+        return None
+
+
+    #middlePath = path.split(tag)
+    #middlePath = middlePath[-1].replace('\\','/').split("/")
+    #middle = ""
+
+    #i = 0
+    #for paths in middle:
+
+    #    if i!=0:
+    #        middle = os.path.join(middle, paths).replace('\\','/')
+    #    i = i+1
+
+
+    pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,path,filename).replace('\\','/')
+   
+    pathCambios = os.path.join(tag,ultimaVersion,path).replace('\\','/')
+ 
+    pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,path,filename).replace('\\','/')
+
+    hashUV = HashCreator(pathUV)
+    hashNV = HashCreator(pathNV)
+    if (hashUV == hashNV):
+        print("Correcto Funcionamiento")
+    else:
+        print(f"\n\n\nSe ha detectado una modificacion!!: {pathNV}\n\n\n")
+        cambios.append(
+
+            {"tag": tag, 
+            "path": pathCambios.replace('\\','/'),
+            "filename": filename
+            })
+
+def HashCreator(archivo):
+    """
+    Calcula el hash de un archivo utilizando el algoritmo indicado.
+    :param archivo: Ruta del archivo
+    :param metodo: Algoritmo de hash (por defecto SHA-256)
+    :return: Hash del archivo en formato hexadecimal
+    """
+
+    hash_func = hashlib.sha256()  # Puedes cambiar a otro algoritmo como md5 o sha1
+    try:
+        with open(archivo, "rb") as f:  # Asegúrate de leer en modo binario
+            while chunk := f.read(8192):  # Leer en bloques de 8 KB
+                hash_func.update(chunk)
+        return hash_func.hexdigest()  # Devuelve el hash en formato hexadecimal
+    except FileNotFoundError:
+        return None
+
 
 # Obtener Tags de la base de datos
 def obtTags():
