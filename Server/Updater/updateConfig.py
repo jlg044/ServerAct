@@ -14,7 +14,7 @@ DOWNLOAD_DIR = './Robot/Downloads'
 VERSION_DIR = "./version.json"
 
 #Directorio destino a la hora de descargar la ultima version del servidor
-UPDATE_DIR = '/Server/updatesloc'
+UPDATE_DIR = './Server/updatesloc'
 
 #Iniciar sesion en la base de datos
 UserDB = "mario"

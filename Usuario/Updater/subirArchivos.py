@@ -28,8 +28,12 @@ def tojson(cambios):
     print(f"El diccionario se ha guardado correctamente en {ruta_archivo}")
 
 def getModel():
+
     pathModel = path.replace('\\', '/').split("/")
-    pathModel = pathModel[-1].split("_")
+    if pathModel[-1] == '':
+        pathModel = pathModel[-2].split("_")
+    else:
+        pathModel = pathModel[-1].split("_")
     return pathModel[0]
 
 def iteracionArchivos(dir,tag,updates):
@@ -164,16 +168,17 @@ def HashCreator(archivo):
 
 # Función para subir archivos al servidor
 def upload_file(update, end=False):
-
+    print(update)
     global url
     file_name = update["filename"]
     localPath = update["path"]
     modelo = update["tag"]
+    print(update)
 
-    formatted_path = localPath.split(modelo, 1)[1]
-    print(formatted_path)
+    formatted_path = localPath.split(modelo, 1)[1].split("/")[0]
+    formatted_path = os.path.join(modelo,formatted_path).replace('\\','/')
 
-    urlFile = os.path.join(up.urlServer,modelo, formatted_path).replace('\\','/')
+    urlFile = os.path.join(up.urlServer,up.UPDATE_DIR,modelo, formatted_path).replace('\\','/')
     url_with_end = f"{urlFile}?end={end}"
 
 
@@ -235,6 +240,7 @@ if __name__ == '__main__':
     #tojson(cambios)
     for update in updates:
         if (update == updates[-1]):
+            print("Soy ultra true")
             upload_file(update,end = True)
             break
         upload_file(update)

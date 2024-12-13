@@ -17,7 +17,7 @@ UPDATE_DIR = up.UPDATE_DIR
 os.makedirs(UPDATE_DIR, exist_ok=True)
 
 # Montar directorio estático para servir archivos
-app.mount(UPDATE_DIR, StaticFiles(directory=UPDATE_DIR), name="static")
+app.mount("/Server/updatesloc'", StaticFiles(directory=UPDATE_DIR), name="static")
 
 
 if __name__ == "__main__":
@@ -75,10 +75,11 @@ async def download_file(tag: str, version: str, full_path: str):
     #Put Zone
 
 # Ruta para subir un archivo de actualización
-@app.put("/updates/{tag}/{version}/{full_path:path}",end=False)
+@app.put("/updates/{tag}/{version}/{full_path:path}")
 async def upload_update(tag: str, version: str, full_path: str, file: UploadFile = File(...), end: bool=False):
 
     """Sube un archivo al servidor y lo organiza por carpetas según el tag."""
+    
     target_path = os.path.join(UPDATE_DIR, tag, version, full_path)
     os.makedirs(target_path, exist_ok=True)
 
@@ -98,7 +99,7 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
 
 
 # Ruta para subir un archivo de actualización
-@app.put("/updates/{tag}/{version}",end=False)
+@app.put("/updates/{tag}/{version}")
 async def upload_update(tag: str, version: str, file: UploadFile = File(...), end: bool=False):
 
     """Sube un archivo al servidor y lo organiza por carpetas según el tag."""

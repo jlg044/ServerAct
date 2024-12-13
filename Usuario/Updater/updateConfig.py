@@ -13,5 +13,5 @@ DOWNLOAD_DIR = './Downloads'
 VERSION_DIR = "./version.json"
 
 #Directorio destino a la hora de descargar la ultima version del servidor
-UPDATE_DIR = '/updatesloc'
+UPDATE_DIR = './updatesloc'
 
