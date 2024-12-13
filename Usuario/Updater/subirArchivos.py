@@ -168,20 +168,24 @@ def HashCreator(archivo):
 
 # Función para subir archivos al servidor
 def upload_file(update, end=False):
-    print(update)
     global url
     file_name = update["filename"]
     localPath = update["path"]
     modelo = update["tag"]
-    print(update)
 
-    formatted_path = localPath.split(modelo, 1)[1].split("/")[0]
-    formatted_path = os.path.join(modelo,formatted_path).replace('\\','/')
+    formatted_path = localPath.split(modelo, 1)[1].split("/")
 
-    urlFile = os.path.join(up.urlServer,up.UPDATE_DIR,modelo, formatted_path).replace('\\','/')
+    middle = ""
+    i = 0
+    for paths in formatted_path:
+        if i!=0:
+            middle = os.path.join(middle, paths).replace('\\','/')
+        i = i+1
+
+    urlFile = os.path.join(up.urlServer, modelo, middle).replace('\\','/')
     url_with_end = f"{urlFile}?end={end}"
-
-
+    print(urlFile)
+    print(url_with_end)
 
     try:
         # Construir la ruta completa al archivo
@@ -243,6 +247,4 @@ if __name__ == '__main__':
             print("Soy ultra true")
             upload_file(update,end = True)
             break
-        upload_file(update)
-    print(cambios)
-    
+        upload_file(update)    

@@ -80,17 +80,20 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
 
     """Sube un archivo al servidor y lo organiza por carpetas según el tag."""
     
-    target_path = os.path.join(UPDATE_DIR, tag, version, full_path)
+    target_path = os.path.join(UPDATE_DIR, tag, version, full_path).replace("\\", "/")
     os.makedirs(target_path, exist_ok=True)
 
-    file_path = os.path.join(target_path, file.filename)
-    global cambios
-    
+    file_path = os.path.join(target_path, file.filename).replace("\\", "/")
 
+    global cambios
+
+    ppath = os.path.join(tag, version, full_path).replace("\\", "/")
+    
     # Guardar el archivo subido
     with open(file_path, "wb") as f:
         f.write(await file.read())
-    filesComparator(tag,file.filename,full_path)
+        filesComparator(tag, file.filename, ppath)
+
     if(end==True):
         insertUploadOnDB(version)
         cambios = []
@@ -103,17 +106,20 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
 async def upload_update(tag: str, version: str, file: UploadFile = File(...), end: bool=False):
 
     """Sube un archivo al servidor y lo organiza por carpetas según el tag."""
-    target_path = os.path.join(UPDATE_DIR, tag, version)
+    target_path = os.path.join(UPDATE_DIR, tag, version).replace("\\", "/")
     os.makedirs(target_path, exist_ok=True)
 
-    file_path = os.path.join(target_path, file.filename)
+    file_path = os.path.join(target_path, file.filename).replace("\\", "/")
+
     global cambios
-    
+
+    ppath = os.path.join(tag, version).replace("\\", "/")
 
     # Guardar el archivo subido
     with open(file_path, "wb") as f:
         f.write(await file.read())
-    filesComparator(tag,file.filename,full_path=None)
+        filesComparator(tag, file.filename, ppath)
+
     if(end==True):
         insertUploadOnDB(version)
         cambios = []
@@ -145,48 +151,44 @@ def insertUploadOnDB(version):
     db.subirVersion(version, cambios)
 
 def filesComparator(tag,filename,path):
-
     #Get ultima version
-    ultimaVersion = db.listVersions(tag).reverse()
-    ultimaVersion = reversed(ultimaVersion)
-    ultimaVersion = ultimaVersion[1]
-    nuevaVersion = ultimaVersion[0]
+    ultimaVersion = db.listVersions(tag)
 
-    if ultimaVersion is None:
-        return None
-
-
-    #middlePath = path.split(tag)
-    #middlePath = middlePath[-1].replace('\\','/').split("/")
-    #middle = ""
-
-    #i = 0
-    #for paths in middle:
-
-    #    if i!=0:
-    #        middle = os.path.join(middle, paths).replace('\\','/')
-    #    i = i+1
-
-
-    pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,path,filename).replace('\\','/')
-   
-    pathCambios = os.path.join(tag,ultimaVersion,path).replace('\\','/')
- 
-    pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,path,filename).replace('\\','/')
-
-    hashUV = HashCreator(pathUV)
-    hashNV = HashCreator(pathNV)
-    if (hashUV == hashNV):
-        print("Correcto Funcionamiento")
-    else:
-        print(f"\n\n\nSe ha detectado una modificacion!!: {pathNV}\n\n\n")
+    if(ultimaVersion == []):
         cambios.append(
-
             {"tag": tag, 
-            "path": pathCambios.replace('\\','/'),
+            "path": path.replace('\\','/'),
             "filename": filename
             })
+        
+    else:
+        ultimaVersion = reversed(ultimaVersion)
+        ultimaVersion = ultimaVersion[1]
+        nuevaVersion = ultimaVersion[0]
+    return 
+    """
+        if ultimaVersion is None:
+            return None
 
+        pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,path,filename).replace('\\','/')
+
+        pathCambios = os.path.join(tag,ultimaVersion,path).replace('\\','/')
+
+        pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,path,filename).replace('\\','/')
+
+        hashUV = HashCreator(pathUV)
+        hashNV = HashCreator(pathNV)
+        if (hashUV == hashNV):
+            print("Correcto Funcionamiento")
+        else:
+            print(f"\n\n\nSe ha detectado una modificacion!!: {pathNV}\n\n\n")
+            cambios.append(
+
+                {"tag": tag, 
+                "path": pathCambios.replace('\\','/'),
+                "filename": filename
+                })
+"""
 def HashCreator(archivo):
     """
     Calcula el hash de un archivo utilizando el algoritmo indicado.
