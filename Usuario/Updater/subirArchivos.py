@@ -38,7 +38,7 @@ def iteracionArchivos(dir,tag,updates):
 
         if os.path.isdir(os.path.join(dir, filename)):
 
-            iteracionArchivos(os.path.join(dir, filename),tag)
+            iteracionArchivos(os.path.join(dir, filename),tag,updates)
                 # Recorrer archivos en el subdirectorio
                 # Añadir el tag y el nombre completo del archivo
         else:
@@ -165,15 +165,18 @@ def HashCreator(archivo):
 # Función para subir archivos al servidor
 def upload_file(update, end=False):
 
+    global url
     file_name = update["filename"]
     localPath = update["path"]
     modelo = update["tag"]
 
-    indice = localPath.find(modelo)
-    if indice != -1:
-        filePath = localPath[indice:]  # Extraer la subruta desde el modelo encontrado
+    formatted_path = localPath.split(modelo, 1)[1]
+    print(formatted_path)
 
-    urlFile = os.path.join(url, filePath).replace('\\','/')
+    urlFile = os.path.join(up.urlServer,modelo, formatted_path).replace('\\','/')
+    url_with_end = f"{urlFile}?end={end}"
+
+
 
     try:
         # Construir la ruta completa al archivo
@@ -181,7 +184,7 @@ def upload_file(update, end=False):
 
         with open(file_path, 'rb') as file:
             files = {'file': file}
-            response = requests.put(urlFile, files=files)
+            response = requests.put(url_with_end, files=files)
 
             # Verificar si la respuesta es un JSON antes de intentar decodificarla
             try:

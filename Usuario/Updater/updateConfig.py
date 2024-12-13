@@ -1,5 +1,3 @@
-from database import *
-
 #TODAS LAS VARIABLES DEBERIAN SER CONSTANTES??????
 
 #Configuración server

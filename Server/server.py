@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 import Updater.updateConfig as up
 import Updater.database as db
+import hashlib
 
 #Main
 
@@ -97,19 +98,25 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
 
 
 # Ruta para subir un archivo de actualización
-@app.put("/updates/{tag}/{version}")
-async def upload_update(tag: str, version: str, file: UploadFile = File(...)):
+@app.put("/updates/{tag}/{version}",end=False)
+async def upload_update(tag: str, version: str, file: UploadFile = File(...), end: bool=False):
 
     """Sube un archivo al servidor y lo organiza por carpetas según el tag."""
     target_path = os.path.join(UPDATE_DIR, tag, version)
     os.makedirs(target_path, exist_ok=True)
 
     file_path = os.path.join(target_path, file.filename)
+    global cambios
     
+
     # Guardar el archivo subido
     with open(file_path, "wb") as f:
         f.write(await file.read())
-
+    filesComparator(tag,file.filename,full_path=None)
+    if(end==True):
+        insertUploadOnDB(version)
+        cambios = []
+    
     return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
 
 
