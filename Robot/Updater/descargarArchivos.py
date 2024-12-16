@@ -62,52 +62,90 @@ def download_file(modelo, version, path, filename):
 # Función principal para sincronizar archivos
 def download_lastVersionChanges(modelo):
 
-    versionRobot = modelo["modelo"]+"_"+modelo["version"]
+    versionRobot = modelo["modelo"] + "_" + modelo["version"]
 
-    urlServerUltimaVersion = os.path.join(up.urlServer, modelo, versionRobot).replace('\\','/')
+    urlServerUltimaVersion = os.path.join(up.urlServer, modelo["modelo"], versionRobot).replace('\\', '/')
     print(urlServerUltimaVersion)
-
 
     try:
         response = requests.get(urlServerUltimaVersion)
         print(response.status_code)
 
-            # Verificar el código de estado
+        # Verificar el c贸digo de estado
         if response.status_code == 200:
-            # Parsear el resultado como JSON
+            # Consumir y almacenar el JSON inmediatamente
             updates = response.json()
             print("Updates recibidos:")
-            for update in updates:
-                print(f"Tag: {update['tag']}, Path: {update['path']}, Filename: {update['filename']}")
+
+            # Iterar sobre cada versi贸n (clave) y sus actualizaciones
+            i = 0
+            for version, update_list in reversed(updates.items()):
+                print(f"\nVersi贸n: {version}")
+                for update in update_list:  # Iterar sobre la lista de actualizaciones para esta versi贸n
+                    tag = update['tag']
+                    path = update['path']
+                    filename = update['filename']
+                    if(i == 0):
+                        ultimaVersion = path.replace("\\","/").split("/")[1]
+                        i=i+1
+
+                    path = path.replace("\\","/").split("/")
+                    path[1]=ultimaVersion
+
+                    pathLastVersion = ""
+                    pathDownload = ""
+                    x=0
+                    for paths in path:
+                        pathLastVersion = os.path.join(pathLastVersion, paths).replace('\\', '/')
+                        if(x>1):
+                            pathDownload = os.path.join(pathDownload, paths).replace('\\', '/')
+                        x=x+1
+                    print(f"Tag: {tag}, Path: {pathLastVersion}, Filename: {filename}")
+                    print(pathLastVersion)
+                    pathDownload
+                    # Crear directorios si no existen
+                    ruta_directorio = os.path.join(up.DOWNLOAD_DIR, pathDownload).replace('\\', '/')
+                    os.makedirs(ruta_directorio, exist_ok=True)
+
+                    # Construir URL del archivo
+                    urlFile = os.path.join(up.urlServer, pathLastVersion, filename).replace('\\', '/')
+
+                    # Descargar el archivo
+                    try:
+                        file_response = requests.get(urlFile, stream=True)
+
+                        if file_response.status_code == 200:
+                            # Descargar y guardar el archivo
+                            ruta_archivo = os.path.join(ruta_directorio, filename).replace('\\', '/')
+                            with open(ruta_archivo, "wb") as archivo_local:
+                                for chunk in file_response.iter_content(chunk_size=8192):  # Leer en bloques de 8 KB
+                                    if chunk:
+                                        archivo_local.write(chunk)
+                            print(f"Archivo descargado correctamente en {ruta_archivo}")
+                        else:
+                            print(f"\n\nError al consultar el archivo del servidor para {urlFile}: {file_response.text}\n\n")
+                            return False
+
+                    except requests.RequestException as e:
+                        print(f"\n\nError al conectar con el servidor: {e}\n\n")
+                        return False
+
+                                # Leer el archivo version.json
+            # Leer el archivo JSON
+            with open(up.VERSION_DIR, 'r') as file:
+                data = json.load(file)  # Cargar el contenido del JSON como un diccionario
+
+            # Modificar el valor de la clave "version"
+            data["version"] = ultimaVersion
+
+            # Guardar los cambios en el archivo JSON
+            with open(up.VERSION_DIR, 'w') as file:
+                json.dump(data, file, indent=4)  # Guardar el archivo con formato legible
         else:
-            print(f"Error: {response.status_code} - {response.json().get('error', 'Unknown error')}")
+            print(f"Error: {response.status_code} - {response.text}")
 
     except requests.RequestException as e:
         print(f"Error al conectar con el servidor: {e}")
-
-    
-    for update in updates:
-
-        os.makedirs(os.path.join(up.DOWNLOAD_DIR, update["path"]).replace('\\','/'), exist_ok=True)
-
-        urlFile = os.path.join(up.urlServer, update["path"],update['filename']).replace('\\','/')
-        try:
-            # Enviar solicitud GET al servidor
-            response = requests.get(urlFile, stream=True)
-            
-            if response.status_code == 200:
-                # Descargar y guardar el archivo en bloques
-                with open(os.path.join(up.DOWNLOAD_DIR, update["path"],update["filename"]).replace('\\','/'), "wb") as archivo_local:
-                    for chunk in response.iter_content(chunk_size=8192):  # Leer en bloques de 8 KB
-                        if chunk:
-                            archivo_local.write(chunk)
-                print(f"Archivo descargado correctamente en {update['path']}")
-            else:
-                print(f"\n\nError al consultar el archivo del servidor para {urlFile}: {response.text}\n\n")
-                return False
-        except requests.RequestException as e:
-            print(f"\n\nError al conectar con el servidor: {e}\n\n")
-            return False
 
 
 def updater():

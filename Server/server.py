@@ -67,8 +67,11 @@ async def download_update(tag: str, version: str):
 # Ruta para descargar un archivo de actualización
 @app.get("/updates/{tag}/{version}/{full_path:path}")
 async def download_file(tag: str, version: str, full_path: str):
+
     """Descarga un archivo específico."""
-    file_path = os.path.join(UPDATE_DIR, tag, version,full_path)
+    lastVersion = db.listVersions(tag)
+    lastVersion = lastVersion[-1][0]
+    file_path = os.path.join(UPDATE_DIR, tag, lastVersion,full_path)
     if os.path.exists(file_path):
         return FileResponse(file_path)
     return {"error": "Archivo no encontrado"}

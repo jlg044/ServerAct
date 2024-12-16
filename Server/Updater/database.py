@@ -60,6 +60,7 @@ def subirVersion(vers, camb):
         print(f"Error al serializar JSON: {e}")
         return {"error": "Error al procesar los cambios."}
 
+    conn.begin()
     try:
         cur.executemany(
             "INSERT INTO versiones (version, cambios, fecha) VALUES (?, ?, ?)", 
@@ -67,8 +68,9 @@ def subirVersion(vers, camb):
         )
     except mariadb.Error as e: 
         print(f"Gran Error: {e}")
+        conn.rollback()
+        return {"message": "Error al insertar la nueva version."}
 
-    conn.commit()
 
     # Obtener id de la versión insertada
     id_version = ObtenerIdVersion(vers)
@@ -85,10 +87,12 @@ def subirVersion(vers, camb):
         )
     except mariadb.Error as e: 
         print(f"Super Error: {e}")
-        
+        conn.rollback()
+        return {"message": "Error al insertar las ids de version_etiqueta."}
+    
     conn.commit()
 
-    return {"message": "Versión y etiquetas insertadas correctamente."}
+    return {"message": "Versión y etiquetas insertadas correctamente."}, 200
 
     
 #------------------------------------------------------------------------------------------------------------#
@@ -159,16 +163,7 @@ def comprobarActualizacion(tag, versAct):
     else:
         print("No se encontraron versiones nuevas.")
 
-    respuesta = input("¿Quieres descargarlas actualizaciones? (s/n): ").strip().lower()
-    if respuesta in ['s', 'n', '']:
-        if respuesta == 's' or respuesta == '':
-            print("Iniciando la descarga...")
-            cambios = ObtenerJsonVersiones(versionesNuevas)
-        else:
-            print("Descarga cancelada.")
-            return 0
-    else:
-        print("Respuesta no válida. Por favor, ingresa 'S' para sí o 'n' para no.")
+    cambios = ObtenerJsonVersiones(versionesNuevas)
 
     return cambios
 
