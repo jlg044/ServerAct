@@ -129,7 +129,7 @@ def listVersions(tag):
     id_t = ObtenerIdTag(tag)
 
     # Comprobar si hay nuevas actualizaciones
-    cur.execute("SELECT v.* FROM versiones v "
+    cur.execute("SELECT v.version FROM versiones v "
                 "JOIN version_etiqueta ve ON v.id = ve.id_versiones "
                 "JOIN etiquetas e ON ve.id_tag = e.id WHERE e.id = ?", id_t)
 

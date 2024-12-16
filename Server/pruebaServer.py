@@ -64,12 +64,13 @@ def download_file(modelo, version, filename, path):
 if __name__ == '__main__':
     ultimaVersion = db.listVersions("Vega22")
     print(ultimaVersion)
+    print(ultimaVersion[-1])
     #verNuevo()
     #target_path = os.path.join(up.UPDATE_DIR, "Vega22", "Vega22_v1.0.1").replace("\\", "/")
     #sv.filesComparator("Vega22", "Panacea.py", target_path)
-    vers = "Vega22_v1.0.1"
-    version = vers
-    tagArray = vers.split("_v")
-    print(version)
-    id_vers = db.ObtenerIdVersion(version)
-    print(id_vers)
+    #vers = "Vega22_v1.0.1"
+    #version = vers
+    #tagArray = vers.split("_v")
+    #print(version)
+    #id_vers = db.ObtenerIdVersion(version)
+    #print(id_vers)
