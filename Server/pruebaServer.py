@@ -17,23 +17,24 @@ import Updater.database as db
 
 #Obtener versiones actualizadas
 def verNuevo():
-    cambios = sv.compAct("Vega22", "Vega22_v1.0.0")
+    cambios = sv.compAct("Vega22", "Vega22_v1.0.4")
+    print(cambios)
     if(cambios == 0):
         return "No se ha descargado nada"
 
     # Iterar sobre cada versión en el diccionario
     for version, data in reversed(cambios.items()):
         print("\n\n")
-        tag = data.get('tag', '')
+        tag = data[0].get('tag', '')
         print(f"Tag: {tag}")
         
         version_num = version  # Extraer el número de versión del path
         print(f"Versión: {version_num}")
         
-        filename = data.get('filename', '')
+        filename = data[0].get('filename', '')
         print(f"Filename: {filename}")
         
-        path = up.UPDATE_DIR + data.get('path', '') + "/" + filename
+        path = up.UPDATE_DIR + data[0].get('path', '') + "/" + filename
         print(f"Path: {path}")
         
         # Descargar archivo
@@ -62,10 +63,10 @@ def download_file(modelo, version, filename, path):
 
 # Main
 if __name__ == '__main__':
-    ultimaVersion = db.listVersions("Vega22")
-    print(ultimaVersion)
-    print(ultimaVersion[-1])
-    #verNuevo()
+    #ultimaVersion = db.listVersions("Vega22")
+    #print(ultimaVersion)
+    #print(ultimaVersion[-1])
+    verNuevo()
     #target_path = os.path.join(up.UPDATE_DIR, "Vega22", "Vega22_v1.0.1").replace("\\", "/")
     #sv.filesComparator("Vega22", "Panacea.py", target_path)
     #vers = "Vega22_v1.0.1"
