@@ -1,7 +1,7 @@
 #TODAS LAS VARIABLES DEBERIAN SER CONSTANTES??????
 
 #Configuración server
-urlServer = "http://127.0.0.1:8000/"
+urlServer = "http://127.0.0.1:8000/updates/"
 
 #Configuración etiquetas de versiones VEGA
 etiquetaVersion = {"Vega11","Vega22"}

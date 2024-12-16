@@ -6,6 +6,19 @@ import os
 import Updater.updateConfig as up
 import Updater.database as db
 import hashlib
+import logging
+
+# Configurar logging básico
+
+logging.basicConfig(
+    level=logging.DEBUG,  # Nivel de log: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler()  # Muestra los logs en la terminal
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 #Main
 
@@ -15,15 +28,14 @@ cambios = []
 #Directorio donde se almacenarán las actualizaciones
 UPDATE_DIR = up.UPDATE_DIR
 os.makedirs(UPDATE_DIR, exist_ok=True)
-
+updateMount = UPDATE_DIR.split(".")[1]
 # Montar directorio estático para servir archivos
-app.mount("/Server/updatesloc'", StaticFiles(directory=UPDATE_DIR), name="static")
+app.mount(updateMount, StaticFiles(directory=UPDATE_DIR), name="static")
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
-
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True, log_level="debug")  # Nivel de logs
 
 #Conections
     #Get Zone
@@ -62,7 +74,7 @@ async def download_update(tag: str, version: str):
 
 
     """Devolver diccionario con rutas a descargar."""
-# Ruta para subir un archivo de actualización
+# Ruta para descargar un archivo de actualización
 @app.get("/updates/{tag}/{version}/{full_path:path}")
 async def download_file(tag: str, version: str, full_path: str):
     """Descarga un archivo específico."""
@@ -79,23 +91,40 @@ async def download_file(tag: str, version: str, full_path: str):
 async def upload_update(tag: str, version: str, full_path: str, file: UploadFile = File(...), end: bool=False):
 
     """Sube un archivo al servidor y lo organiza por carpetas según el tag."""
-    
-    target_path = os.path.join(UPDATE_DIR, tag, version, full_path)
-    os.makedirs(target_path, exist_ok=True)
-
-    file_path = os.path.join(target_path, file.filename)
+    logger.info(f"Iniciando subida de archivo: {file.filename}, tag: {tag}, version: {version}, path: {full_path}, end: {end}")
     global cambios
-    
+    try:
+        # Crear el directorio si no existe
+        target_path = os.path.join(UPDATE_DIR, tag, version, full_path)
+        logger.debug(f"Creando directorio en: {target_path}")
+        os.makedirs(target_path, exist_ok=True)
 
-    # Guardar el archivo subido
-    with open(file_path, "wb") as f:
-        f.write(await file.read())
-    filesComparator(tag,file.filename,full_path)
-    if(end==True):
-        insertUploadOnDB(version)
-        cambios = []
+        # Construir la ruta completa del archivo
+        file_path = os.path.join(target_path, file.filename)
+        logger.debug(f"Ruta completa del archivo: {file_path}")
 
-    return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
+        # Guardar el archivo subido
+        with open(file_path, "wb") as f:
+            logger.info(f"Guardando archivo {file.filename} en: {file_path}")
+            f.write(await file.read())
+
+        logger.info(f"Archivo {file.filename} guardado correctamente.")
+
+        # Comparar el archivo subido con las versiones anteriores
+        logger.debug(f"Iniciando comparación de archivos para: {file.filename}")
+        #filesComparator(tag, file.filename, full_path,version)
+
+        if end:
+            logger.info(f"Marcando como finalizada la subida para la versión {version}. Actualizando base de datos.")
+            insertUploadOnDB(version)
+            cambios = []  # Reiniciar cambios
+            logger.debug(f"Cambios reiniciados.")
+
+        return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
+
+    except Exception as e:
+        logger.error(f"Error durante la subida del archivo {file.filename}: {e}")
+        return {"error": "Ocurrió un error durante la subida."}
 
 
 # Ruta para subir un archivo de actualización
@@ -103,22 +132,40 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
 async def upload_update(tag: str, version: str, file: UploadFile = File(...), end: bool=False):
 
     """Sube un archivo al servidor y lo organiza por carpetas según el tag."""
-    target_path = os.path.join(UPDATE_DIR, tag, version)
-    os.makedirs(target_path, exist_ok=True)
-
-    file_path = os.path.join(target_path, file.filename)
+    logger.info(f"Inicio de la subida: tag={tag}, version={version}, end={end}")
     global cambios
-    
+    try:
+        # Crear el directorio si no existe
+        target_path = os.path.join(UPDATE_DIR, tag, version)
+        logger.info(f"targetPath: {target_path}")
+        os.makedirs(target_path, exist_ok=True)
+        logger.debug(f"Directorio creado/existente en: {target_path}")
 
-    # Guardar el archivo subido
-    with open(file_path, "wb") as f:
-        f.write(await file.read())
-    filesComparator(tag,file.filename,full_path=None)
-    if(end==True):
-        insertUploadOnDB(version)
-        cambios = []
-    
-    return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
+        # Construir la ruta completa del archivo
+        file_path = os.path.join(target_path, file.filename)
+        logger.debug(f"Ruta completa del archivo: {file_path}")
+
+        # Guardar el archivo subido
+        with open(file_path, "wb") as f:
+            f.write(await file.read())
+        logger.info(f"Archivo guardado correctamente en: {file_path}")
+
+        # Llamar al comparador de archivos
+        full_path = ""
+        filesComparator(tag, file.filename, full_path,version)
+        logger.debug(f"Comparación de archivos completada para: {file.filename}")
+
+        # Si es la última iteración, actualizar la base de datos
+        if end:
+            insertUploadOnDB(version)
+            cambios = []  # Reiniciar cambios
+            logger.info(f"Base de datos actualizada para la versión: {version}")
+
+        return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
+
+    except Exception as e:
+        logger.error(f"Error durante la subida del archivo: {e}")
+        return {"error": "Ocurrió un error durante la subida."}
 
 
 #Utilities Tools
@@ -142,37 +189,44 @@ def iteracionArchivos(dir,tag,updates):
             })
 
 def insertUploadOnDB(version):
+    global cambios
     db.subirVersion(version, cambios)
 
-def filesComparator(tag,filename,path):
+def filesComparator(tag,filename,path,versionAct):
+
 
     #Get ultima version
-    ultimaVersion = db.listVersions(tag).reverse()
-    ultimaVersion = reversed(ultimaVersion)
-    ultimaVersion = ultimaVersion[1]
-    nuevaVersion = ultimaVersion[0]
+    ultimaVersion = db.listVersions(tag)
+    if ultimaVersion == []:
+        if path == "":
+            pathCambios = os.path.join(tag,versionAct).replace('\\','/')
+        else:
+            pathCambios = os.path.join(tag,versionAct,path).replace('\\','/')
+        cambios.append(
 
-    if ultimaVersion is None:
-        return None
+            {"tag": tag, 
+            "path": pathCambios,
+            "filename": filename
+            })
+        return 
+    else:
+        ultimaVersion = ultimaVersion[-1]
+        nuevaVersion = versionAct
 
+    if path == "":
+    
+        pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,filename).replace('\\','/')
+    
+        pathCambios = os.path.join(tag,ultimaVersion).replace('\\','/')
+    
+        pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,filename).replace('\\','/')
+    else:
 
-    #middlePath = path.split(tag)
-    #middlePath = middlePath[-1].replace('\\','/').split("/")
-    #middle = ""
-
-    #i = 0
-    #for paths in middle:
-
-    #    if i!=0:
-    #        middle = os.path.join(middle, paths).replace('\\','/')
-    #    i = i+1
-
-
-    pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,path,filename).replace('\\','/')
-   
-    pathCambios = os.path.join(tag,ultimaVersion,path).replace('\\','/')
- 
-    pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,path,filename).replace('\\','/')
+        pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,path,filename).replace('\\','/')
+    
+        pathCambios = os.path.join(tag,ultimaVersion,path).replace('\\','/')
+    
+        pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,path,filename).replace('\\','/')
 
     hashUV = HashCreator(pathUV)
     hashNV = HashCreator(pathNV)
@@ -183,9 +237,10 @@ def filesComparator(tag,filename,path):
         cambios.append(
 
             {"tag": tag, 
-            "path": pathCambios.replace('\\','/'),
+            "path": pathCambios,
             "filename": filename
             })
+        
 
 def HashCreator(archivo):
     """

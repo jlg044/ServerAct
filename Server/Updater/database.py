@@ -48,34 +48,47 @@ def subirTags(tags):
 
 # Añadir al server los archivos modificados
 def subirVersion(vers, camb):
-    # vers es el nombre de la version 
-    # camb es un formato json con el nombre de los archivos cambificados
-    
+        # vers es el nombre de la versión 
+    # camb es un formato JSON o un objeto serializable
+
+    print(camb)  # Debug para verificar qué se está intentando insertar
+
+    try:
+        # Serialización JSON y asegurarte de que sea una cadena
+        camb_json = json.dumps(camb)
+    except TypeError as e:
+        print(f"Error al serializar JSON: {e}")
+        return {"error": "Error al procesar los cambios."}
+
     try:
         cur.executemany(
-            "INSERT INTO versiones (version, archivo, fecha) VALUES (?)", 
-            (vers, camb, date())  # Pass list of tuples
+            "INSERT INTO versiones (version, cambios, fecha) VALUES (?, ?, ?)", 
+            [(vers, camb_json, date.today())]  # Asegúrate de que sea una lista de tuplas
         )
-
     except mariadb.Error as e: 
-        print(f"Error: {e}")
+        print(f"Gran Error: {e}")
 
-    conn.commit() 
+    conn.commit()
 
-    #Subir la relacion de la nueva etiqueta con su tag.
-    tagArray = vers.split("_")
-
-    id_tag = ObtenerIdTag(tagArray[0])
+    # Subir la relación de la nueva etiqueta con su tag
+    tagArray = vers.split("_v")[0]
+    id_tag = ObtenerIdTag(tagArray)
 
     try:
-        cur.executemany("INSERT INTO version_etiqueta (id_versiones, id_tag) VALUES (?)",
-            (cur.execute("SELECT id FROM versiones WHERE version = ?", (vers)), id_tag)
+        # Obtener id de la versión insertada
+        cur.execute("SELECT id FROM versiones WHERE version = ?", (vers,))
+        id_version = cur.fetchone()[0]  # Asumimos que hay un único resultado
+
+        cur.executemany(
+            "INSERT INTO version_etiqueta (id_versiones, id_tag) VALUES (?, ?)",
+            [(id_version, id_tag)]
         )
-        
     except mariadb.Error as e: 
-        print(f"Error: {e}")
-        
-    conn.commit() 
+        print(f"Super Error: {e}")
+
+    conn.commit()
+
+    return {"message": "Versión y etiquetas insertadas correctamente."}
     
 #------------------------------------------------------------------------------------------------------------#
 
