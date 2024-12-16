@@ -6,7 +6,7 @@
                 "enableSsl": "Disabled"
             },
             "previewLimit": 50,
-            "server": "10.0.60.28",
+            "server": "10.0.60.87",
             "port": 3306,
             "driver": "MariaDB",
             "name": "GrodiAct",
