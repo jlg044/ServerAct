@@ -181,7 +181,16 @@ def upload_file(update, end=False):
         if i!=0:
             middle = os.path.join(middle, paths).replace('\\','/')
         i = i+1
+    formatted_path = localPath.split(modelo, 1)[1].split("/")
 
+    middle = ""
+    i = 0
+    for paths in formatted_path:
+        if i!=0:
+            middle = os.path.join(middle, paths).replace('\\','/')
+        i = i+1
+
+    urlFile = os.path.join(up.urlServer, modelo, middle).replace('\\','/')
     urlFile = os.path.join(up.urlServer, modelo, middle).replace('\\','/')
     url_with_end = f"{urlFile}?end={end}"
 

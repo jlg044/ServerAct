@@ -228,13 +228,13 @@ def filesComparator(tag,filename,path,versionAct):
     
         pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,path,filename).replace('\\','/')
 
-    hashUV = HashCreator(pathUV)
-    hashNV = HashCreator(pathNV)
-    if (hashUV == hashNV):
-        print("Correcto Funcionamiento")
-    else:
-        print(f"\n\n\nSe ha detectado una modificacion!!: {pathNV}\n\n\n")
-        cambios.append(
+        hashUV = HashCreator(pathUV)
+        hashNV = HashCreator(pathNV)
+        if (hashUV == hashNV):
+            print("Correcto Funcionamiento")
+        else:
+            print(f"\n\n\nSe ha detectado una modificacion!!: {pathNV}\n\n\n")
+            cambios.append(
 
             {"tag": tag, 
             "path": pathCambios,

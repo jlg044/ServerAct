@@ -2,6 +2,7 @@ import server as sv
 import Updater.updateConfig as up
 import os
 import requests
+import Updater.database as db
 
 #Subir los tags
 #tag es una tupla
@@ -61,4 +62,14 @@ def download_file(modelo, version, filename, path):
 
 # Main
 if __name__ == '__main__':
-    verNuevo()
+    ultimaVersion = db.listVersions("Vega22")
+    print(ultimaVersion)
+    #verNuevo()
+    #target_path = os.path.join(up.UPDATE_DIR, "Vega22", "Vega22_v1.0.1").replace("\\", "/")
+    #sv.filesComparator("Vega22", "Panacea.py", target_path)
+    vers = "Vega22_v1.0.1"
+    version = vers
+    tagArray = vers.split("_v")
+    print(version)
+    id_vers = db.ObtenerIdVersion(version)
+    print(id_vers)

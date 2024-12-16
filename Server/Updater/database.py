@@ -48,9 +48,9 @@ def subirTags(tags):
 
 # Añadir al server los archivos modificados
 def subirVersion(vers, camb):
-        # vers es el nombre de la versión 
+    # vers es el nombre de la versión 
     # camb es un formato JSON o un objeto serializable
-
+    
     print(camb)  # Debug para verificar qué se está intentando insertar
 
     try:
@@ -70,29 +70,39 @@ def subirVersion(vers, camb):
 
     conn.commit()
 
+    # Obtener id de la versión insertada
+    id_version = ObtenerIdVersion(vers)
+
     # Subir la relación de la nueva etiqueta con su tag
-    tagArray = vers.split("_v")[0]
-    id_tag = ObtenerIdTag(tagArray)
+    tagArray = vers.split("_v")
+
+    id_tag = ObtenerIdTag(tagArray[0])
 
     try:
-        # Obtener id de la versión insertada
-        cur.execute("SELECT id FROM versiones WHERE version = ?", (vers,))
-        id_version = cur.fetchone()[0]  # Asumimos que hay un único resultado
-
         cur.executemany(
             "INSERT INTO version_etiqueta (id_versiones, id_tag) VALUES (?, ?)",
-            [(id_version, id_tag)]
+            [(id_version, id_tag[0])]
         )
     except mariadb.Error as e: 
         print(f"Super Error: {e}")
-
+        
     conn.commit()
 
     return {"message": "Versión y etiquetas insertadas correctamente."}
+
     
 #------------------------------------------------------------------------------------------------------------#
 
 # Downloads Tools
+
+def ObtenerIdVersion(vers):
+    print(vers)
+    cur.execute("SELECT id FROM versiones WHERE version = ?", (vers,))
+    id_version = cur.fetchone()
+
+    id_version = id_version[0]
+    print(id_version)
+    return id_version
 
 def ObtenerIdTag(tag):
     cur.execute("SELECT id FROM etiquetas WHERE etiqueta = ?", (tag,))
