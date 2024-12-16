@@ -112,7 +112,7 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
 
         # Comparar el archivo subido con las versiones anteriores
         logger.debug(f"Iniciando comparación de archivos para: {file.filename}")
-        #filesComparator(tag, file.filename, full_path,version)
+        filesComparator(tag, file.filename, full_path,version)
 
         if end:
             logger.info(f"Marcando como finalizada la subida para la versión {version}. Actualizando base de datos.")
@@ -209,9 +209,9 @@ def filesComparator(tag,filename,path,versionAct):
             "filename": filename
             })
         return 
-    else:
-        ultimaVersion = ultimaVersion[-1]
-        nuevaVersion = versionAct
+    
+    ultimaVersion = ultimaVersion[-1][0]
+    nuevaVersion = versionAct
 
     if path == "":
     

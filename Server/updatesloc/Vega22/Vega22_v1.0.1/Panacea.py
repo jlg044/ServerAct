@@ -1,1 +1,0 @@
-print("Este codigo es una locura paneaceada")
