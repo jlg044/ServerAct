@@ -1,4 +1,4 @@
-import Robot.descargarArchivos as up
+import Updater.descargarArchivos as up
 
 up.updater()
 

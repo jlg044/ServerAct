@@ -57,21 +57,11 @@ async def list_updates(tag: str):
 # Ruta para descargar una versión específica de un tag
 @app.get("/updates/{tag}/{version}")
 async def download_update(tag: str, version: str):
-    updates = []
-    file_path = os.path.join(UPDATE_DIR, tag, version)
-    if os.path.exists(file_path):
 
-
-        if os.path.isdir(file_path):  # Verificar que el subdirectorio exista
-            iteracionArchivos(file_path,tag, updates)
-        else: print(f"Directorio {file_path} no existe")
-        upd = updates
-        return upd
-        
-            #return FileResponse(file_path)
-    return {"error": "Archivo no encontrado"}
-
-
+    updates = compAct(tag,version)
+    if updates == {}:
+        return {"error": "Archivo no encontrado"}
+    return updates
 
     """Devolver diccionario con rutas a descargar."""
 # Ruta para descargar un archivo de actualización
@@ -82,8 +72,6 @@ async def download_file(tag: str, version: str, full_path: str):
     if os.path.exists(file_path):
         return FileResponse(file_path)
     return {"error": "Archivo no encontrado"}
-
-
     #Put Zone
 
 # Ruta para subir un archivo de actualización
@@ -217,14 +205,14 @@ def filesComparator(tag,filename,path,versionAct):
     
         pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,filename).replace('\\','/')
     
-        pathCambios = os.path.join(tag,ultimaVersion).replace('\\','/')
+        pathCambios = os.path.join(tag,nuevaVersion).replace('\\','/')
     
         pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,filename).replace('\\','/')
     else:
 
         pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,path,filename).replace('\\','/')
     
-        pathCambios = os.path.join(tag,ultimaVersion,path).replace('\\','/')
+        pathCambios = os.path.join(tag,nuevaVersion,path).replace('\\','/')
     
         pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,path,filename).replace('\\','/')
 

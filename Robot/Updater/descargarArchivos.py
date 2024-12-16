@@ -12,36 +12,11 @@ DOWNLOAD_DIR = up.DOWNLOAD_DIR
 try:
     with open(up.VERSION_DIR) as json_file:
         versionActual = json.load(json_file)
+        print(versionActual)
         print("Archivo de version cargado correctamente:", versionActual)
 except Exception as e:
     print(f"No se ha podido cargar el archivo de version del robot: {e}")
 
-
-# Función para obtener la ultima version del servidor
-def get_server_updates(modelo):
-
-    url = os.path.join(up.urlServer, modelo).replace('\\','/')
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            return response.json()  # Devuelve la lista de versiones
-        else:
-            print(f"Error al consultar actualizaciones del servidor para {modelo}: {response.text}")
-            return []
-    except requests.RequestException as e:
-        print(f"Error al conectar con el servidor: {e}")
-        return []
-
-def get_last_version(versiones_server):
-    if versiones_server == []:
-        return None
-    # Crear una lista de pares (original, Version)
-    parsed_versions = [(v, (v.split('v')[1])) for v in versiones_server]
-    # Ordenar por la versión (segundo elemento del par)
-    parsed_versions.sort(key=lambda x: x[1], reverse=True)
-    # Retornar la versión original que sea la última
-    ultimaVersion = parsed_versions[0][0]
-    return ultimaVersion
 
 def iteracionArchivos(dir,tag,updates):
 
@@ -85,18 +60,11 @@ def download_file(modelo, version, path, filename):
         print(f"Error al conectar con el servidor: {e}")
 
 # Función principal para sincronizar archivos
-def download_lastVersionComplete(modelo):
+def download_lastVersionChanges(modelo):
 
-    print(f"Sincronizando archivos para el modelo {modelo}...")
-    server_versions = get_server_updates(modelo)
-    print(f"La ultima version para el modelo {modelo} es la version {get_last_version(server_versions)}")
-    ultimaVersion = get_last_version(server_versions)
-    if ultimaVersion is None:
-        print(f"No se encontraron archivos en el servidor para el tag {modelo}.")
-        return None
-    
+    versionRobot = modelo["modelo"]+"_"+modelo["version"]
 
-    urlServerUltimaVersion = os.path.join(up.urlServer, modelo, ultimaVersion).replace('\\','/')
+    urlServerUltimaVersion = os.path.join(up.urlServer, modelo, versionRobot).replace('\\','/')
     print(urlServerUltimaVersion)
 
 
@@ -119,24 +87,17 @@ def download_lastVersionComplete(modelo):
 
     
     for update in updates:
-        interPath = update["path"].split("\\")
-        i = 0
-        inter=""
 
-        for paths in interPath:
+        os.makedirs(os.path.join(up.DOWNLOAD_DIR, update["path"]).replace('\\','/'), exist_ok=True)
 
-            if i!=0:
-                inter = os.path.join(inter, paths).replace('\\','/')
-            i = i+1
-        os.makedirs(os.path.join(up.DOWNLOAD_DIR, inter).replace('\\','/'), exist_ok=True)
-        urlFile = os.path.join(up.urlServer, inter,update['filename']).replace('\\','/')
+        urlFile = os.path.join(up.urlServer, update["path"],update['filename']).replace('\\','/')
         try:
             # Enviar solicitud GET al servidor
             response = requests.get(urlFile, stream=True)
             
             if response.status_code == 200:
                 # Descargar y guardar el archivo en bloques
-                with open(os.path.join(up.DOWNLOAD_DIR, inter,update["filename"]).replace('\\','/'), "wb") as archivo_local:
+                with open(os.path.join(up.DOWNLOAD_DIR, update["path"],update["filename"]).replace('\\','/'), "wb") as archivo_local:
                     for chunk in response.iter_content(chunk_size=8192):  # Leer en bloques de 8 KB
                         if chunk:
                             archivo_local.write(chunk)
@@ -150,10 +111,8 @@ def download_lastVersionComplete(modelo):
 
 
 def updater():
-    download_lastVersionComplete(versionActual["modelo"])
+    download_lastVersionChanges(versionActual)
     print("Completado")
 
 #def updater(modelo):
 #    sync_updates(modelo)
-
-

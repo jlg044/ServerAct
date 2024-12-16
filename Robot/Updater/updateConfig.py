@@ -1,4 +1,4 @@
-from database import *
+
 
 #TODAS LAS VARIABLES DEBERIAN SER CONSTANTES??????
 
@@ -16,4 +16,8 @@ VERSION_DIR = "./version.json"
 
 #Directorio destino a la hora de descargar la ultima version del servidor
 UPDATE_DIR = '/updatesloc'
+
+#C:\Users\mario\sourceServer\ServerAct\Robot\version.json
+
+#C:\Users\mario\sourceServer\ServerAct\Robot\Updater\updateConfig.py
 
