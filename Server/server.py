@@ -230,6 +230,9 @@ def filesComparator(tag,filename,path,versionAct):
 
         hashUV = HashCreator(pathUV)
         hashNV = HashCreator(pathNV)
+        print(hashUV)
+        print(hashNV)
+        print(hashUV == hashNV)
         if (hashUV == hashNV):
             print("Correcto Funcionamiento")
         else:
@@ -240,7 +243,7 @@ def filesComparator(tag,filename,path,versionAct):
             "path": pathCambios,
             "filename": filename
             })
-        
+            print(cambios)
 
 def HashCreator(archivo):
     """
