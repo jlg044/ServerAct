@@ -148,14 +148,14 @@ def comprobarActualizacion(tag, versAct):
     versiones = listVersions(tag)
 
     for vers in versiones:
-        if versAct < vers[1]:  # Comparar las versiones
+        if versAct < vers[0]:  # Comparar las versiones
             versionesNuevas.append(vers)
     
     # Mostrar las versiones nuevas
     if versionesNuevas:
         print("Versiones nuevas encontradas:")
         for v in versionesNuevas:
-            print(v[1])
+            print(v[0])
     else:
         print("No se encontraron versiones nuevas.")
 
@@ -178,7 +178,7 @@ def ObtenerJsonVersiones(versionesNuevas):
 
     for version in versionesNuevas:
         # Ejecutar la consulta para obtener los cambios relacionados con la versión
-        cur.execute("SELECT cambios FROM versiones WHERE version =?", (version[1],))
+        cur.execute("SELECT cambios FROM versiones WHERE version =?", (version[0],))
         json_resultados = cur.fetchall()  # Obtener los resultados de los cambios
         
         for j in json_resultados:
@@ -189,10 +189,10 @@ def ObtenerJsonVersiones(versionesNuevas):
                 try:
                     json_data = json.loads(json_string)  # Convertir cadena JSON a diccionario
                     # Fusionar JSON al diccionario utilizando el valor de la versión como clave
-                    if version[1] in data:
-                        data[version[1]].update(json_data)
+                    if version[0] in data:
+                        data[version[0]].update(json_data)
                     else:
-                        data[version[1]] = json_data  # Si la clave no existe, crearla
+                        data[version[0]] = json_data  # Si la clave no existe, crearla
                 except json.JSONDecodeError as e:
                     print(f"Error al procesar JSON: {str(e)}")
 
