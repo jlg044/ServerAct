@@ -147,12 +147,17 @@ def listVersions(tag):
 #Comprueba si hay actualizaciones
 def comprobarActualizacion(tag, versAct):
     versionesNuevas = []
-    
+    print(versAct)
+    print(tag)
     # Obtener ids de la version actual del robot   
     versiones = listVersions(tag)
+    print(versiones)
 
     for vers in versiones:
         if versAct < vers[0]:  # Comparar las versiones
+            print(versAct)
+            print(vers[0])
+            print(versAct < vers[0])
             versionesNuevas.append(vers)
     
     # Mostrar las versiones nuevas

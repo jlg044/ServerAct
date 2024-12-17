@@ -66,10 +66,8 @@ def download_lastVersionChanges(modelo):
     #Borrar temp en cada nueva descarga
     if(os.path.exists(up.TEMP_DIR)):
         eliminar_carpeta_recursivamente(up.TEMP_DIR)
-        
-    versionRobot = modelo["modelo"] + "_" + modelo["version"]
 
-    urlServerUltimaVersion = os.path.join(up.urlServer, modelo["modelo"], versionRobot).replace('\\', '/')
+    urlServerUltimaVersion = os.path.join(up.urlServer, modelo["modelo"], modelo["version"]).replace('\\', '/')
     print(urlServerUltimaVersion)
 
     try:
