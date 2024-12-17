@@ -62,6 +62,10 @@ def download_file(modelo, version, path, filename):
 # Función principal para sincronizar archivos
 def download_lastVersionChanges(modelo):
 
+    #Borrar temp en cada nueva descarga
+    if(os.path.exists(up.TEMP_DIR)):
+        eliminar_carpeta_recursivamente(up.TEMP_DIR)
+        
     versionRobot = modelo["modelo"] + "_" + modelo["version"]
 
     urlServerUltimaVersion = os.path.join(up.urlServer, modelo["modelo"], versionRobot).replace('\\', '/')
@@ -112,6 +116,7 @@ def download_lastVersionChanges(modelo):
                     if os.path.isfile(ruta_archivo):
                         
                         temp_directory = os.path.join(up.TEMP_DIR,pathDownload)
+
                         os.makedirs(temp_directory, exist_ok=True)
                         temp_directory = os.path.join(temp_directory, filename).replace('\\', '/')
 
@@ -165,6 +170,18 @@ def download_lastVersionChanges(modelo):
     except requests.RequestException as e:
         print(f"Error al conectar con el servidor: {e}")
 
+def eliminar_carpeta_recursivamente(ruta):
+    if os.path.exists(ruta):
+        for archivo_o_carpeta in os.listdir(ruta):
+            ruta_completa = os.path.join(ruta, archivo_o_carpeta)
+            if os.path.isdir(ruta_completa):
+                eliminar_carpeta_recursivamente(ruta_completa)  # Llamada recursiva para subcarpeta
+            else:
+                os.remove(ruta_completa)  # Eliminar archivo
+        os.rmdir(ruta)  # Eliminar la carpeta vacía
+        print(f"La carpeta {ruta} ha sido eliminada.")
+    else:
+        print(f"La carpeta {ruta} no existe.")
 
 def updater():
     download_lastVersionChanges(versionActual)
