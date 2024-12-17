@@ -106,9 +106,27 @@ def download_lastVersionChanges(modelo):
                     # Crear directorios si no existen
                     ruta_directorio = os.path.join(up.DOWNLOAD_DIR, pathDownload).replace('\\', '/')
                     os.makedirs(ruta_directorio, exist_ok=True)
-
+                    ruta_archivo = os.path.join(ruta_directorio, filename).replace('\\', '/')
                     # Construir URL del archivo
                     urlFile = os.path.join(up.urlServer, pathLastVersion, filename).replace('\\', '/')
+                    if os.path.isfile(ruta_archivo):
+                        
+                        temp_directory = os.path.join(up.TEMP_DIR,pathDownload)
+                        os.makedirs(temp_directory, exist_ok=True)
+                        temp_directory = os.path.join(temp_directory, filename).replace('\\', '/')
+
+                        
+                        # Guardar cambios en el temp directory.
+                        with open(ruta_archivo, 'r') as file:
+                            data = json.load(file)  # Cargar el contenido del JSON como un diccionario
+
+                        # Modificar el valor de la clave "version"
+                        data["version"] = ultimaVersion
+
+                        # Guardar los cambios en el archivo JSON
+                        with open(temp_directory, 'w') as file:
+                            json.dump(data, file, indent=4)  # Guardar el archivo con formato legible
+
 
                     # Descargar el archivo
                     try:
@@ -116,7 +134,7 @@ def download_lastVersionChanges(modelo):
 
                         if file_response.status_code == 200:
                             # Descargar y guardar el archivo
-                            ruta_archivo = os.path.join(ruta_directorio, filename).replace('\\', '/')
+
                             with open(ruta_archivo, "wb") as archivo_local:
                                 for chunk in file_response.iter_content(chunk_size=8192):  # Leer en bloques de 8 KB
                                     if chunk:

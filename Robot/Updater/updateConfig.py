@@ -17,6 +17,7 @@ VERSION_DIR = "./version.json"
 #Directorio destino a la hora de descargar la ultima version del servidor
 UPDATE_DIR = '/updatesloc'
 
+TEMP_DIR = './temp/'
 
 #C:/Users/mario/sourceServer/ServerAct/Robot/version.json
 
