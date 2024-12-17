@@ -4,9 +4,6 @@
 #Configuración server
 urlServer = "http://127.0.0.1:8000/"
 
-#Configuración etiquetas de versiones VEGA
-etiquetaVersion = {"Vega11","Vega22"}
-
 #Configuracion de descarga
 DOWNLOAD_DIR = './Robot/Downloads'
 
