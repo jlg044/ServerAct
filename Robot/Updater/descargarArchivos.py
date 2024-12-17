@@ -7,8 +7,6 @@ import json
 DOWNLOAD_DIR = up.DOWNLOAD_DIR
 
 #Version actual del robot
-
-
 try:
     with open(up.VERSION_DIR) as json_file:
         versionActual = json.load(json_file)
@@ -20,31 +18,24 @@ except Exception as e:
 
 def iteracionArchivos(dir,tag,updates):
 
-    updates
-    
     for filename in os.listdir(dir): #Para cada archivo en el directorio
-
         if os.path.isdir(os.path.join(dir, filename)):
-
+            # Recorrer archivos en el subdirectorio
+            # Añadir el tag y el nombre completo del archivo
             iteracionArchivos(os.path.join(dir, filename),tag)
-                # Recorrer archivos en el subdirectorio
-                # Añadir el tag y el nombre completo del archivo
+        
         else:
             updates.append(
-
             {"tag": tag, 
             "path": dir,
             "filename": filename
             })
-
-
 
 # Función para descargar un archivo del servidor
 def download_file(modelo, version, path, filename):
     urlPath = os.path.join(up.urlServer, modelo, version, path,).replace('\\','/')
     urlFilePath = os.path.join(urlPath, filename).replace('\\','/')
 
-    # Asegurar que la carpeta correspondiente exista
     os.makedirs(os.path.dirname(urlFilePath), exist_ok=True)
     
     try:
@@ -59,10 +50,8 @@ def download_file(modelo, version, path, filename):
     except requests.RequestException as e:
         print(f"Error al conectar con el servidor: {e}")
 
-
 # Función principal para sincronizar archivos
 def download_lastVersionChanges(modelo):
-
     #Borrar temp en cada nueva descarga
     if(os.path.exists(up.TEMP_DIR)):
         eliminar_carpeta_recursivamente(up.TEMP_DIR)
@@ -74,17 +63,16 @@ def download_lastVersionChanges(modelo):
         response = requests.get(urlServerUltimaVersion)
         print(response.status_code)
 
-        # Verificar el c贸digo de estado
+        # Verificar el codigo de estado
         if response.status_code == 200:
-            # Consumir y almacenar el JSON inmediatamente
             updates = response.json()
             print("Updates recibidos:")
 
-            # Iterar sobre cada versi贸n (clave) y sus actualizaciones
+            # Iterar sobre cada version (clave) y sus actualizaciones
             i = 0
             for version, update_list in reversed(updates.items()):
                 print(f"\nVersion: {version}")
-                for update in update_list:  # Iterar sobre la lista de actualizaciones para esta versi贸n
+                for update in update_list:  
                     tag = update['tag']
                     path = update['path']
                     filename = update['filename']
@@ -111,7 +99,6 @@ def download_lastVersionChanges(modelo):
                     os.makedirs(ruta_directorio, exist_ok=True)
                     ruta_archivo = os.path.join(ruta_directorio, filename).replace('\\', '/')
                     
-                   
                     if os.path.isfile(ruta_archivo):
                         
                         temp_directory = os.path.join(up.TEMP_DIR,pathDownload)
@@ -119,18 +106,14 @@ def download_lastVersionChanges(modelo):
                         os.makedirs(temp_directory, exist_ok=True)
                         temp_directory = os.path.join(temp_directory, filename).replace('\\', '/')
 
-
                         # Copiar el archivo manualmente
                         try:
-                            with open(ruta_archivo, 'rb') as archivo_origen:  # Leer el archivo como binario
-                                with open(temp_directory, 'wb') as archivo_destino:  # Escribir el archivo como binario
+                            with open(ruta_archivo, 'rb') as archivo_origen:  
+                                with open(temp_directory, 'wb') as archivo_destino: 
                                     archivo_destino.write(archivo_origen.read())
                             print(f"Archivo copiado a: {temp_directory}")
                         except Exception as e:
                             print(f"Error al copiar el archivo: {e}")
-
-                    
-
 
                     # Descargar el archivo
                     # Construir URL del archivo
@@ -141,12 +124,12 @@ def download_lastVersionChanges(modelo):
 
                         if file_response.status_code == 200:
                             # Descargar y guardar el archivo
-
                             with open(ruta_archivo, "wb") as archivo_local:
                                 for chunk in file_response.iter_content(chunk_size=8192):  # Leer en bloques de 8 KB
                                     if chunk:
                                         archivo_local.write(chunk)
                             print(f"Archivo descargado correctamente en {ruta_archivo}")
+
                         else:
                             print(f"\n\nError al consultar el archivo del servidor para {urlFile}: {file_response.text}\n\n")
                             return False
@@ -155,17 +138,17 @@ def download_lastVersionChanges(modelo):
                         print(f"\n\nError al conectar con el servidor: {e}\n\n")
                         return False
 
-                                # Leer el archivo version.json
             # Leer el archivo JSON
             with open(up.VERSION_DIR, 'r') as file:
-                data = json.load(file)  # Cargar el contenido del JSON como un diccionario
+                data = json.load(file)
 
             # Modificar el valor de la clave "version"
             data["version"] = ultimaVersion
 
             # Guardar los cambios en el archivo JSON
             with open(up.VERSION_DIR, 'w') as file:
-                json.dump(data, file, indent=4)  # Guardar el archivo con formato legible
+                json.dump(data, file, indent=4)
+
         else:
             print(f"Error: {response.status_code} - {response.text}")
 
@@ -177,11 +160,12 @@ def eliminar_carpeta_recursivamente(ruta):
         for archivo_o_carpeta in os.listdir(ruta):
             ruta_completa = os.path.join(ruta, archivo_o_carpeta)
             if os.path.isdir(ruta_completa):
-                eliminar_carpeta_recursivamente(ruta_completa)  # Llamada recursiva para subcarpeta
+                eliminar_carpeta_recursivamente(ruta_completa)
             else:
                 os.remove(ruta_completa)  # Eliminar archivo
         os.rmdir(ruta)  # Eliminar la carpeta vacía
         print(f"La carpeta {ruta} ha sido eliminada.")
+
     else:
         print(f"La carpeta {ruta} no existe.")
 
@@ -189,5 +173,3 @@ def updater():
     download_lastVersionChanges(versionActual)
     print("Completado")
 
-#def updater(modelo):
-#    sync_updates(modelo)
