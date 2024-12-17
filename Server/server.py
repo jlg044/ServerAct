@@ -9,7 +9,6 @@ import hashlib
 import logging
 
 # Configurar logging básico
-
 logging.basicConfig(
     level=logging.DEBUG,  # Nivel de log: DEBUG, INFO, WARNING, ERROR, CRITICAL
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -20,8 +19,6 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-#Main
-
 app = FastAPI()
 cambios = []
 
@@ -29,30 +26,26 @@ cambios = []
 UPDATE_DIR = up.UPDATE_DIR
 os.makedirs(UPDATE_DIR, exist_ok=True)
 updateMount = UPDATE_DIR.split(".")[1]
+
 # Montar directorio estático para servir archivos
 app.mount(updateMount, StaticFiles(directory=UPDATE_DIR), name="static")
 
-
+#Main
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000, reload=True, log_level="debug")  # Nivel de logs
 
 #Conections
-    #Get Zone
 
-    # Ruta para listar las versiones disponibles para un tag
+#Get Zone
+
+# Ruta para listar las versiones disponibles para un tag
 @app.get("/updates/{tag}")
 async def list_updates(tag: str):
     """Devuelve todas las versiones disponibles para un tag."""
     versiones = []
     versiones = db.listVersions(tag)
     return versiones
-    
-    #tag_dir = os.path.join(UPDATE_DIR, tag)
-    #if os.path.isdir(tag_dir):
-    #    versions = os.listdir(tag_dir)
-    #    return versions
-    #return []
 
 # Ruta para descargar una versión específica de un tag
 @app.get("/updates/{tag}/{version}")
@@ -63,7 +56,6 @@ async def download_update(tag: str, version: str):
         return {"error": "Archivo no encontrado"}
     return updates
 
-    """Devolver diccionario con rutas a descargar."""
 # Ruta para descargar un archivo de actualización
 @app.get("/updates/{tag}/{version}/{full_path:path}")
 async def download_file(tag: str, version: str, full_path: str):
@@ -75,7 +67,8 @@ async def download_file(tag: str, version: str, full_path: str):
     if os.path.exists(file_path):
         return FileResponse(file_path)
     return {"error": "Archivo no encontrado"}
-    #Put Zone
+
+#Put Zone
 
 # Ruta para subir un archivo de actualización
 @app.put("/updates/{tag}/{version}/{full_path:path}")
@@ -109,7 +102,6 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
             logger.info(f"Marcando como finalizada la subida para la versión {version}. Actualizando base de datos.")
             insertUploadOnDB(version)
             cambios = []  # Reiniciar cambios
-            logger.debug(f"Cambios reiniciados.")
 
         return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
 
@@ -128,7 +120,6 @@ async def upload_update(tag: str, version: str, file: UploadFile = File(...), en
     try:
         # Crear el directorio si no existe
         target_path = os.path.join(UPDATE_DIR, tag, version)
-        logger.info(f"targetPath: {target_path}")
         os.makedirs(target_path, exist_ok=True)
         logger.debug(f"Directorio creado/existente en: {target_path}")
 
@@ -161,19 +152,18 @@ async def upload_update(tag: str, version: str, file: UploadFile = File(...), en
 
 #Utilities Tools
 
-#Iterar directorios para guardar todos los archivos en UPDATES.
+# Iterar directorios para guardar todos los archivos en UPDATES.
 def iteracionArchivos(dir,tag,updates):
     
     for filename in os.listdir(dir): #Para cada archivo en el directorio
 
         if os.path.isdir(os.path.join(dir, filename)):
-
+            # Recorrer archivos en el subdirectorio
+            # Añadir el tag y el nombre completo del archivo
             iteracionArchivos(os.path.join(dir, filename),tag,updates)
-                # Recorrer archivos en el subdirectorio
-                # Añadir el tag y el nombre completo del archivo
+                
         else:
             updates.append(
-
             {"tag": tag, 
             "path": dir,
             "filename": filename
@@ -184,8 +174,6 @@ def insertUploadOnDB(version):
     db.subirVersion(version, cambios)
 
 def filesComparator(tag,filename,path,versionAct):
-
-
     #Get ultima version
     ultimaVersion = db.listVersions(tag)
     if ultimaVersion == []:
@@ -204,55 +192,41 @@ def filesComparator(tag,filename,path,versionAct):
     ultimaVersion = ultimaVersion[-1][0]
     nuevaVersion = versionAct
 
-    if path == "":
-    
-        pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,filename).replace('\\','/')
-    
-        pathCambios = os.path.join(tag,nuevaVersion).replace('\\','/')
-    
+    if path == "":    
+        pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,filename).replace('\\','/')   
+        pathCambios = os.path.join(tag,nuevaVersion).replace('\\','/')    
         pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,filename).replace('\\','/')
-    else:
 
-        pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,path,filename).replace('\\','/')
-    
+    else:
+        pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,path,filename).replace('\\','/')  
         pathCambios = os.path.join(tag,nuevaVersion,path).replace('\\','/')
-    
         pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,path,filename).replace('\\','/')
 
         hashUV = HashCreator(pathUV)
         hashNV = HashCreator(pathNV)
-        print(hashUV)
-        print(hashNV)
-        print(hashUV == hashNV)
+
         if (hashUV == hashNV):
-            print("Correcto Funcionamiento")
+            print("Sin cambios")
+
         else:
             print(f"\n\n\nSe ha detectado una modificacion!!: {pathNV}\n\n\n")
+            
             cambios.append(
-
             {"tag": tag, 
             "path": pathCambios,
             "filename": filename
             })
-            print(cambios)
 
+#Calcula el hash de un archivo utilizando el algoritmo indicado.
 def HashCreator(archivo):
-    """
-    Calcula el hash de un archivo utilizando el algoritmo indicado.
-    :param archivo: Ruta del archivo
-    :param metodo: Algoritmo de hash (por defecto SHA-256)
-    :return: Hash del archivo en formato hexadecimal
-    """
-
-    hash_func = hashlib.sha256()  # Puedes cambiar a otro algoritmo como md5 o sha1
+    hash_func = hashlib.sha256()  
     try:
-        with open(archivo, "rb") as f:  # Asegúrate de leer en modo binario
-            while chunk := f.read(8192):  # Leer en bloques de 8 KB
+        with open(archivo, "rb") as f:  
+            while chunk := f.read(8192):  
                 hash_func.update(chunk)
-        return hash_func.hexdigest()  # Devuelve el hash en formato hexadecimal
+        return hash_func.hexdigest()  
     except FileNotFoundError:
         return None
-
 
 # Obtener Tags de la base de datos
 def obtTags():
