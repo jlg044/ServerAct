@@ -59,6 +59,7 @@ def download_file(modelo, version, path, filename):
     except requests.RequestException as e:
         print(f"Error al conectar con el servidor: {e}")
 
+
 # Función principal para sincronizar archivos
 def download_lastVersionChanges(modelo):
 
@@ -84,7 +85,7 @@ def download_lastVersionChanges(modelo):
             # Iterar sobre cada versi贸n (clave) y sus actualizaciones
             i = 0
             for version, update_list in reversed(updates.items()):
-                print(f"\nVersi贸n: {version}")
+                print(f"\nVersion: {version}")
                 for update in update_list:  # Iterar sobre la lista de actualizaciones para esta versi贸n
                     tag = update['tag']
                     path = update['path']
@@ -106,13 +107,13 @@ def download_lastVersionChanges(modelo):
                         x=x+1
                     print(f"Tag: {tag}, Path: {pathLastVersion}, Filename: {filename}")
                     print(pathLastVersion)
-                    pathDownload
+
                     # Crear directorios si no existen
                     ruta_directorio = os.path.join(up.DOWNLOAD_DIR, pathDownload).replace('\\', '/')
                     os.makedirs(ruta_directorio, exist_ok=True)
                     ruta_archivo = os.path.join(ruta_directorio, filename).replace('\\', '/')
-                    # Construir URL del archivo
-                    urlFile = os.path.join(up.urlServer, pathLastVersion, filename).replace('\\', '/')
+                    
+                   
                     if os.path.isfile(ruta_archivo):
                         
                         temp_directory = os.path.join(up.TEMP_DIR,pathDownload)
@@ -120,20 +121,23 @@ def download_lastVersionChanges(modelo):
                         os.makedirs(temp_directory, exist_ok=True)
                         temp_directory = os.path.join(temp_directory, filename).replace('\\', '/')
 
-                        
-                        # Guardar cambios en el temp directory.
-                        with open(ruta_archivo, 'r') as file:
-                            data = json.load(file)  # Cargar el contenido del JSON como un diccionario
 
-                        # Modificar el valor de la clave "version"
-                        data["version"] = ultimaVersion
+                        # Copiar el archivo manualmente
+                        try:
+                            with open(ruta_archivo, 'rb') as archivo_origen:  # Leer el archivo como binario
+                                with open(temp_directory, 'wb') as archivo_destino:  # Escribir el archivo como binario
+                                    archivo_destino.write(archivo_origen.read())
+                            print(f"Archivo copiado a: {temp_directory}")
+                        except Exception as e:
+                            print(f"Error al copiar el archivo: {e}")
 
-                        # Guardar los cambios en el archivo JSON
-                        with open(temp_directory, 'w') as file:
-                            json.dump(data, file, indent=4)  # Guardar el archivo con formato legible
+                    
 
 
                     # Descargar el archivo
+                    # Construir URL del archivo
+                    urlFile = os.path.join(up.urlServer, pathLastVersion, filename).replace('\\', '/')
+
                     try:
                         file_response = requests.get(urlFile, stream=True)
 
