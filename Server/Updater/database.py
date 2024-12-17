@@ -44,14 +44,11 @@ def subirTags(tags):
         print(f"Error: {e}")
     
     conn.commit() 
-    print(f"Last Inserted ID: {cur.lastrowid}")
 
 # Añadir al server los archivos modificados
 def subirVersion(vers, camb):
     # vers es el nombre de la versión 
     # camb es un formato JSON o un objeto serializable
-    
-    print(camb)  # Debug para verificar qué se está intentando insertar
 
     try:
         # Serialización JSON y asegurarte de que sea una cadena
@@ -67,9 +64,8 @@ def subirVersion(vers, camb):
             [(vers, camb_json, date.today())]  # Asegúrate de que sea una lista de tuplas
         )
     except mariadb.Error as e: 
-        print(f"Gran Error: {e}")
         conn.rollback()
-        return {"message": "Error al insertar la nueva version."}
+        return {"message": "Error al insertar la nueva version: {e}"}
 
 
     # Obtener id de la versión insertada
@@ -86,9 +82,8 @@ def subirVersion(vers, camb):
             [(id_version, id_tag[0])]
         )
     except mariadb.Error as e: 
-        print(f"Super Error: {e}")
         conn.rollback()
-        return {"message": "Error al insertar las ids de version_etiqueta."}
+        return {"message": "Error al insertar las ids de version_etiqueta: {e}"}
     
     conn.commit()
 
@@ -100,12 +95,10 @@ def subirVersion(vers, camb):
 # Downloads Tools
 
 def ObtenerIdVersion(vers):
-    print(vers)
     cur.execute("SELECT id FROM versiones WHERE version = ?", (vers,))
     id_version = cur.fetchone()
 
     id_version = id_version[0]
-    print(id_version)
     return id_version
 
 def ObtenerIdTag(tag):
@@ -147,17 +140,11 @@ def listVersions(tag):
 #Comprueba si hay actualizaciones
 def comprobarActualizacion(tag, versAct):
     versionesNuevas = []
-    print(versAct)
-    print(tag)
     # Obtener ids de la version actual del robot   
     versiones = listVersions(tag)
-    print(versiones)
 
     for vers in versiones:
         if versAct < vers[0]:  # Comparar las versiones
-            print(versAct)
-            print(vers[0])
-            print(versAct < vers[0])
             versionesNuevas.append(vers)
     
     # Mostrar las versiones nuevas
