@@ -154,6 +154,7 @@ def comprobarActualizacion(tag, versAct):
             print(v[0])
     else:
         print("No se encontraron versiones nuevas.")
+        return ""
 
     cambios = ObtenerJsonVersiones(versionesNuevas)
 

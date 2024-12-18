@@ -54,6 +54,10 @@ async def download_update(tag: str, version: str):
     updates = compAct(tag,version)
     if updates == {}:
         return {"error": "Archivo no encontrado"}
+    
+    if(updates == ""):
+        return updates
+        
     return updates
 
 # Ruta para descargar un archivo de actualización
@@ -238,5 +242,5 @@ def subTags(tags):
     db.subirTags(tags)
 
 def compAct(tag, versAct):
-    cambios = db.comprobarActualizacion(tag, versAct)    
+    cambios = db.comprobarActualizacion(tag, versAct)
     return cambios
