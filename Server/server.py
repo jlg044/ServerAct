@@ -185,6 +185,7 @@ def filesComparator(tag,filename,path,versionAct):
             pathCambios = os.path.join(tag,versionAct).replace('\\','/')
         else:
             pathCambios = os.path.join(tag,versionAct,path).replace('\\','/')
+
         cambios.append(
 
             {"tag": tag, 
@@ -206,20 +207,20 @@ def filesComparator(tag,filename,path,versionAct):
         pathCambios = os.path.join(tag,nuevaVersion,path).replace('\\','/')
         pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,path,filename).replace('\\','/')
 
-        hashUV = HashCreator(pathUV)
-        hashNV = HashCreator(pathNV)
+    hashUV = HashCreator(pathUV)
+    hashNV = HashCreator(pathNV)
 
-        if (hashUV == hashNV):
-            print("Sin cambios")
+    if (hashUV == hashNV):
+        print("Sin cambios")
 
-        else:
-            print(f"\n\n\nSe ha detectado una modificacion!!: {pathNV}\n\n\n")
-            
-            cambios.append(
-            {"tag": tag, 
-            "path": pathCambios,
-            "filename": filename
-            })
+    else:
+        print(f"\n\n\nSe ha detectado una modificacion!!: {pathNV}\n\n\n")
+        
+        cambios.append(
+        {"tag": tag, 
+        "path": pathCambios,
+        "filename": filename
+        })
 
 #Calcula el hash de un archivo utilizando el algoritmo indicado.
 def HashCreator(archivo):
@@ -231,15 +232,6 @@ def HashCreator(archivo):
         return hash_func.hexdigest()  
     except FileNotFoundError:
         return None
-
-# Obtener Tags de la base de datos
-def obtTags():
-    tags = db.obtenerTags()
-    return tags
-
-# Subir Tags a la base de datos
-def subTags(tags):
-    db.subirTags(tags)
 
 def compAct(tag, versAct):
     cambios = db.comprobarActualizacion(tag, versAct)
