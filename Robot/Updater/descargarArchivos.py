@@ -14,6 +14,13 @@ try:
         print("Archivo de version cargado correctamente:", versionActual)
 except Exception as e:
     print(f"No se ha podido cargar el archivo de version del robot: {e}")
+    print("Es necesario crear version.json para el correcto funcionamiento del progrma y tiene que seguir esta estructura:")
+    print(" { \n",
+    "\t'modelo': 'VegaXX',\n",
+    "\t'version': 'VegaXX_vX.X.X'\n",
+    " }" )
+    print("Al ser un .json las comillas '' tienen que ser sustituidas por comillas dobles")
+    exit()
 
 
 def iteracionArchivos(dir,tag,updates):
