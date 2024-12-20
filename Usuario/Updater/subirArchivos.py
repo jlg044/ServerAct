@@ -2,7 +2,6 @@ import os
 import requests
 import argparse
 import updateConfig as up
-import asyncio
 import zipfile
 
 #Recoge el modelo en funcion de la version del programa. Formato Ej: Vega22_v1.0.0
@@ -46,14 +45,14 @@ def iteracionArchivos(dir,tag,updates):
             })
 
 # Función para subir archivos al servidor
-async def upload_file(update, end=False):
+def upload_file():
 
-    file_name = update["filename"]
-    localPath = update["path"]
-    modelo = update["tag"]
+    localPath = path
+    modelo = model
 
     formatted_path = localPath.replace('\\','/').split(modelo, 1)[1].split("/")
     version = None
+
     encontrado = any(palabra.startswith(modelo) for palabra in formatted_path)
     if encontrado:
         print(f"Existe una palabra que empieza por {modelo}.")
@@ -80,21 +79,20 @@ async def upload_file(update, end=False):
             middle = os.path.join(middle, paths).replace('\\','/')
         i = i+1
 
-    urlFile = os.path.join(up.urlServer, modelo, middle).replace('\\','/')
-    url_with_end = f"{urlFile}?end={end}"
-
     version = middle.split("/")[0]
-    path_zip = "./" + version + ".zip"
+    file_zip = version + ".zip"
+    path_zip = "./" + file_zip
+    urlFile = os.path.join(up.urlServer, modelo, version).replace('\\','/')
     
     crear_zip(path, path_zip)
 
     try:
         # Construir la ruta completa al archivo
-        file_path = os.path.join(localPath, file_name).replace('\\','/')
+         
 
-        with open(file_path, 'rb') as file:
+        with open(path_zip, 'rb') as file:
             files = {'file': file}
-            response = requests.put(url_with_end, files=files)
+            response = requests.put(urlFile, files=files)
 
             # Verificar si la respuesta es un JSON antes de intentar decodificarla
             try:
@@ -104,34 +102,15 @@ async def upload_file(update, end=False):
                 print(f"\n \nAlerta!!\nRespuesta no válida del servidor: {response.text}\n \n")
 
             if response.status_code == 200:
-                print(f"Archivo {file_name} subido correctamente en {urlFile}.")
+                print(f"Archivo {file_zip} subido correctamente en {urlFile}.")
             else:
-                print(f"\n \nAlerta!!\nError al subir el archivo {file_name}: {response.text}\n \n")
+                print(f"\n \nAlerta!!\nError al subir el archivo {file_zip}: {response.text}\n \n")
 
     except FileNotFoundError:
-        print(f"\n \nAlerta!!\nArchivo {file_name} no encontrado en {file_path}\n \n")
+        print(f"\n \nAlerta!!\nArchivo {file_zip} no encontrado en {path_zip}\n \n")
     except PermissionError:
-        print(f"\n \nAlerta!!\nNo se pudo acceder al archivo {file_name} debido a permisos insuficientes.\n \n")
+        print(f"\n \nAlerta!!\nNo se pudo acceder al archivo {file_zip} debido a permisos insuficientes.\n \n")
 
-async def main(path):
-    #Comienzo actualizacion.
-    model = getModel()
-    print("C")
-    updates = []
-
-    version_dir = os.path.join(path)
-    if os.path.isdir(version_dir):  # Verificar que el subdirectorio exista
-        iteracionArchivos(version_dir,model,updates)
-    else: print(f"Directorio {version_dir} no existe")
-    i = 0
-    for update in updates:
-        print(i)
-        i=i+1
-
-        if (update == updates[-1]):
-            await upload_file(update,end = True)
-            break
-        await upload_file(update)
 
 # Main
 if __name__ == '__main__':
@@ -150,5 +129,16 @@ if __name__ == '__main__':
     if not files:
         raise Exception('No hay archivos en el directorio')
 
-    asyncio.run(main(path))
+        #Comienzo actualizacion.
+    model = getModel()
+    print("C")
+    updates = []
+
+    version_dir = os.path.join(path)
+    if os.path.isdir(version_dir):  # Verificar que el subdirectorio exista
+        iteracionArchivos(version_dir,model,updates)
+    else: print(f"Directorio {version_dir} no existe")
+
+    upload_file()
+
    
