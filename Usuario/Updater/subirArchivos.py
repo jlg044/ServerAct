@@ -3,6 +3,7 @@ import requests
 import argparse
 import updateConfig as up
 import asyncio
+import zipfile
 
 #Recoge el modelo en funcion de la version del programa. Formato Ej: Vega22_v1.0.0
 def getModel():
@@ -13,6 +14,18 @@ def getModel():
     else:
         pathModel = pathModel[-1].split("_")
     return pathModel[0]
+
+def crear_zip(carpeta_origen, archivo_zip_destino):
+    with zipfile.ZipFile(archivo_zip_destino, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # Recorre todos los archivos y subcarpetas en la carpeta origen
+        for root, dirs, files in os.walk(carpeta_origen):
+            for file in files:
+                # Ruta completa del archivo actual
+                ruta_completa = os.path.join(root, file)
+                # Ruta relativa para el archivo ZIP
+                ruta_relativa = os.path.relpath(ruta_completa, carpeta_origen)
+                # Añade el archivo al ZIP
+                zipf.write(ruta_completa, ruta_relativa)
 
 #Itera un directorio recursivamente y almacena en updates todos los archivos que almacena
 def iteracionArchivos(dir,tag,updates):
@@ -55,7 +68,10 @@ async def upload_file(update, end=False):
         else:
             print(f"No hay ninguna version en la ruta proporcionada {modelo}.")
             return
+        
+    print(localPath)
 
+    
 
     middle = ""
     i = 0
@@ -66,10 +82,14 @@ async def upload_file(update, end=False):
         if i!=0:
             middle = os.path.join(middle, paths).replace('\\','/')
         i = i+1
-    print(middle)
+
     urlFile = os.path.join(up.urlServer, modelo, middle).replace('\\','/')
     url_with_end = f"{urlFile}?end={end}"
 
+    version = middle.split("/")[0]
+    path_zip = "./" + version + ".zip"
+    
+    crear_zip(path, path_zip)
 
     try:
         # Construir la ruta completa al archivo
