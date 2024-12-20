@@ -20,7 +20,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+
 cambios = []
+i = 0
 
 #Directorio donde se almacenarán las actualizaciones
 UPDATE_DIR = up.UPDATE_DIR
@@ -75,6 +77,11 @@ async def download_file(tag: str, version: str, full_path: str):
 async def upload_update(tag: str, version: str, full_path: str, file: UploadFile = File(...), end: bool=False):
 
     """Sube un archivo al servidor y lo organiza por carpetas según el tag."""
+    versiones = db.listVersions(tag)
+    if versiones != []:
+        if version <= versiones[-1][0]:
+            return {"error": "Path Error: La version a subir debe ser mayor que la ultima version disponible."}
+
     logger.info(f"Iniciando subida de archivo: {file.filename}, tag: {tag}, version: {version}, path: {full_path}, end: {end}")
     global cambios
     try:
@@ -97,18 +104,19 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
         # Comparar el archivo subido con las versiones anteriores
         logger.debug(f"Iniciando comparación de archivos para: {file.filename}")
         filesComparator(tag, file.filename, full_path,version)
-
+        global i
+        i = i+1
         if end:
             logger.info(f"Marcando como finalizada la subida para la versión {version}. Actualizando base de datos.")
             insertUploadOnDB(version)
             cambios = []  # Reiniciar cambios
-
-        return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
+            
+        return {"message": f"{i}: Archivo {version} subido correctamente en la carpeta {tag}."}
 
     except Exception as e:
         logger.error(f"Error durante la subida del archivo {file.filename}: {e}")
         return {"error": "Ocurrió un error durante la subida."}
-
+    
 
 # Ruta para subir un archivo de actualización
 @app.put("/updates/{tag}/{version}")
@@ -176,12 +184,13 @@ def insertUploadOnDB(version):
 def filesComparator(tag,filename,path,versionAct):
     #Get ultima version
     ultimaVersion = db.listVersions(tag)
+    print(ultimaVersion)
     if ultimaVersion == []:
         if path == "":
             pathCambios = os.path.join(tag,versionAct).replace('\\','/')
         else:
             pathCambios = os.path.join(tag,versionAct,path).replace('\\','/')
-
+            print("\n\nComo has llegado aqui??")
         cambios.append(
 
             {"tag": tag, 
@@ -205,9 +214,11 @@ def filesComparator(tag,filename,path,versionAct):
 
     hashUV = HashCreator(pathUV)
     hashNV = HashCreator(pathNV)
+    print(f"\n\nEl archivo {pathNV}, se va a comparar con {pathUV}, y sus hashes son {hashUV == hashNV}\n\n")
 
     if (hashUV == hashNV):
         print("Sin cambios")
+        print(f"Recordamos que: {cambios}")
 
     else:
         print(f"\n\n\nSe ha detectado una modificacion!!: {pathNV}\n\n\n")
@@ -217,6 +228,7 @@ def filesComparator(tag,filename,path,versionAct):
         "path": pathCambios,
         "filename": filename
         })
+
 
 #Calcula el hash de un archivo utilizando el algoritmo indicado.
 def HashCreator(archivo):
@@ -230,5 +242,5 @@ def HashCreator(archivo):
         return None
 
 def compAct(tag, versAct):
-    cambios = db.comprobarActualizacion(tag, versAct)    
-    return cambios
+    cambios2 = db.comprobarActualizacion(tag, versAct)    
+    return cambios2

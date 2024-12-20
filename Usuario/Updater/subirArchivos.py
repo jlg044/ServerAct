@@ -2,6 +2,7 @@ import os
 import requests
 import argparse
 import updateConfig as up
+import asyncio
 
 #Recoge el modelo en funcion de la version del programa. Formato Ej: Vega22_v1.0.0
 def getModel():
@@ -32,20 +33,40 @@ def iteracionArchivos(dir,tag,updates):
             })
 
 # Función para subir archivos al servidor
-def upload_file(update, end=False):
+async def upload_file(update, end=False):
     file_name = update["filename"]
     localPath = update["path"]
     modelo = update["tag"]
 
-    formatted_path = localPath.split(modelo, 1)[1].split("/")
+    formatted_path = localPath.replace('\\','/').split(modelo, 1)[1].split("/")
+    version = None
+    encontrado = any(palabra.startswith(modelo) for palabra in formatted_path)
+    if encontrado:
+        print(f"Existe una palabra que empieza por {modelo}.")
+    else:
+        print(f"No hay ninguna palabra que empiece por {modelo}.")
+
+        versionP = localPath.split("/")
+        encontrado = any(palabra.startswith(modelo) for palabra in versionP)
+        if encontrado:
+            print(f"Existe una palabra que empieza por {modelo}.")
+            version=modelo+formatted_path[0]
+            print(f"La version del archivo es: {version}")
+        else:
+            print(f"No hay ninguna version en la ruta proporcionada {modelo}.")
+            return
+
 
     middle = ""
     i = 0
     for paths in formatted_path:
+        if version is not None and i == 0:
+            middle = os.path.join(middle, version).replace('\\','/')
+            print(f"Se ha incorporado la version a middle: ")
         if i!=0:
             middle = os.path.join(middle, paths).replace('\\','/')
         i = i+1
-
+    print(middle)
     urlFile = os.path.join(up.urlServer, modelo, middle).replace('\\','/')
     url_with_end = f"{urlFile}?end={end}"
 
@@ -53,6 +74,8 @@ def upload_file(update, end=False):
     try:
         # Construir la ruta completa al archivo
         file_path = os.path.join(localPath, file_name).replace('\\','/')
+        print(file_path)
+        print(url_with_end)
 
         with open(file_path, 'rb') as file:
             files = {'file': file}
@@ -75,9 +98,29 @@ def upload_file(update, end=False):
     except PermissionError:
         print(f"\n \nAlerta!!\nNo se pudo acceder al archivo {file_name} debido a permisos insuficientes.\n \n")
 
+async def main(path):
+    
+    
+    
+    #Comienzo actualizacion.
+    model = getModel()
+    print("C")
+    updates = []
+    version_dir = os.path.join(path)
+    if os.path.isdir(version_dir):  # Verificar que el subdirectorio exista
+        iteracionArchivos(version_dir,model,updates)
+    else: print(f"Directorio {version_dir} no existe")
+
+    for update in updates:
+
+        if (update == updates[-1]):
+            await upload_file(update,end = True)
+            break
+        await upload_file(update)
+
 # Main
 if __name__ == '__main__':
-
+ 
     # Setup Solicita ruta para actualizacion Formato Ej: Vega22_v0.0.0
     parser = argparse.ArgumentParser(description='Editar manualmente los sectores sobre un set de imágenes')
     parser.add_argument('set_path', type=str, help='Ruta al set de imágenes')
@@ -92,19 +135,6 @@ if __name__ == '__main__':
     files = [file for file in os.listdir(path)]
     if not files:
         raise Exception('No hay archivos en el directorio')
-    
-    #Comienzo actualizacion.
-    model = getModel()
-    print("C")
-    updates = []
-    version_dir = os.path.join(path)
-    if os.path.isdir(version_dir):  # Verificar que el subdirectorio exista
-        iteracionArchivos(version_dir,model,updates)
-    else: print(f"Directorio {version_dir} no existe")
 
-    for update in updates:
-
-        if (update == updates[-1]):
-            upload_file(update,end = True)
-            break
-        upload_file(update)
+    asyncio.run(main(path))
+   
