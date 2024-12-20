@@ -3,6 +3,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
+import zipfile
 import Updater.updateConfig as up
 import Updater.database as db
 import hashlib
@@ -76,11 +77,12 @@ async def download_file(tag: str, version: str, full_path: str):
 
 #Put Zone
 
+"""
 # Ruta para subir un archivo de actualización
 @app.put("/updates/{tag}/{version}/{full_path:path}")
 async def upload_update(tag: str, version: str, full_path: str, file: UploadFile = File(...), end: bool=False):
 
-    """Sube un archivo al servidor y lo organiza por carpetas según el tag."""
+    #Sube un archivo al servidor y lo organiza por carpetas según el tag.
     versiones = db.listVersions(tag)
     if versiones != []:
         if version <= versiones[-1][0]:
@@ -119,9 +121,8 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
 
     except Exception as e:
         logger.error(f"Error durante la subida del archivo {file.filename}: {e}")
-        return {"error": "Ocurrió un error durante la subida."}
+        return {"error": "Ocurrió un error durante la subida."}"""
     
-
 # Ruta para subir un archivo de actualización
 @app.put("/updates/{tag}/{version}")
 async def upload_update(tag: str, version: str, file: UploadFile = File(...), end: bool=False):
@@ -144,6 +145,8 @@ async def upload_update(tag: str, version: str, file: UploadFile = File(...), en
             f.write(await file.read())
         logger.info(f"Archivo guardado correctamente en: {file_path}")
 
+        descomp_zip(file_path, file_path)
+
         # Llamar al comparador de archivos
         full_path = ""
         filesComparator(tag, file.filename, full_path,version)
@@ -163,6 +166,28 @@ async def upload_update(tag: str, version: str, file: UploadFile = File(...), en
 
 
 #Utilities Tools
+
+#Descomprimir y borrar el archivo zip subido
+def descomp_zip(archivo_zip, carpeta_destino):
+    try:
+        # Verifica que el archivo ZIP existe
+        if not os.path.exists(archivo_zip):
+            print(f"El archivo ZIP no existe: {archivo_zip}")
+            return
+        
+        # Crea la carpeta destino si no existe
+        if not os.path.exists(carpeta_destino):
+            os.makedirs(carpeta_destino)
+            print(f"Carpeta destino creada: {carpeta_destino}")
+        
+        # Abre el archivo ZIP y extrae su contenido
+        with zipfile.ZipFile(archivo_zip, 'r') as zip_ref:
+            print(f"Extrayendo archivos de: {archivo_zip}")
+            zip_ref.extractall(carpeta_destino)
+        print(f"Archivo ZIP descomprimido en: {carpeta_destino}")
+        os.remove(archivo_zip)
+    except Exception as e:
+        print(f"Error al descomprimir el archivo ZIP: {e}")
 
 # Iterar directorios para guardar todos los archivos en UPDATES.
 def iteracionArchivos(dir,tag,updates):
