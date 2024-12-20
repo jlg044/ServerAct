@@ -44,20 +44,7 @@ def iteracionArchivos(dir,tag,updates):
             "path": dir,
             "filename": filename
             })
-def create_zip(folder_path, zip_name):
-    print(folder_path)
-    print(zip_name)
- 
-    #Crea un archivo ZIP a partir de una carpeta.
 
-    with zipfile.ZipFile(zip_name, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk(folder_path):
-            for file in files:
-                file_path = os.path.join(root, file)
-                # Agrega el archivo al ZIP, eliminando la parte común de la ruta
-                arcname = os.path.relpath(file_path, folder_path)
-                zipf.write(file_path, arcname)
-    print(f"ZIP creado: {zip_name}")
 # Función para subir archivos al servidor
 async def upload_file(update, end=False):
 
@@ -83,7 +70,6 @@ async def upload_file(update, end=False):
             print(f"No hay ninguna version en la ruta proporcionada {modelo}.")
             return
 
-
     middle = ""
     i = 0
     for paths in formatted_path:
@@ -93,10 +79,9 @@ async def upload_file(update, end=False):
         if i!=0:
             middle = os.path.join(middle, paths).replace('\\','/')
         i = i+1
-    print(middle)
+
     urlFile = os.path.join(up.urlServer, modelo, middle).replace('\\','/')
     url_with_end = f"{urlFile}?end={end}"
-    create_zip(path,version)
 
     version = middle.split("/")[0]
     path_zip = "./" + version + ".zip"
@@ -106,8 +91,6 @@ async def upload_file(update, end=False):
     try:
         # Construir la ruta completa al archivo
         file_path = os.path.join(localPath, file_name).replace('\\','/')
-        print(file_path)
-        print(url_with_end)
 
         with open(file_path, 'rb') as file:
             files = {'file': file}
@@ -131,9 +114,6 @@ async def upload_file(update, end=False):
         print(f"\n \nAlerta!!\nNo se pudo acceder al archivo {file_name} debido a permisos insuficientes.\n \n")
 
 async def main(path):
-    
-    
-    
     #Comienzo actualizacion.
     model = getModel()
     print("C")
@@ -155,7 +135,6 @@ async def main(path):
 
 # Main
 if __name__ == '__main__':
- 
     # Setup Solicita ruta para actualizacion Formato Ej: Vega22_v0.0.0
     parser = argparse.ArgumentParser(description='Editar manualmente los sectores sobre un set de imágenes')
     parser.add_argument('set_path', type=str, help='Ruta al set de imágenes')
