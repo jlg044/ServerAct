@@ -14,6 +14,13 @@ try:
         print("Archivo de version cargado correctamente:", versionActual)
 except Exception as e:
     print(f"No se ha podido cargar el archivo de version del robot: {e}")
+    print("Es necesario crear version.json para el correcto funcionamiento del progrma y tiene que seguir esta estructura:")
+    print(" { \n",
+    "\t'modelo': 'VegaXX',\n",
+    "\t'version': 'VegaXX_vX.X.X'\n",
+    " }" )
+    print("Al ser un .json las comillas '' tienen que ser sustituidas por comillas dobles")
+    exit()
 
 
 def iteracionArchivos(dir,tag,updates):
@@ -68,6 +75,10 @@ def download_lastVersionChanges(modelo):
             updates = response.json()
             print("Updates recibidos:")
 
+            if(updates == ""):
+                print("No se han encontrado actualizaciones nuevas")
+                return
+            
             # Iterar sobre cada version (clave) y sus actualizaciones
             i = 0
             for version, update_list in reversed(updates.items()):
@@ -148,7 +159,7 @@ def download_lastVersionChanges(modelo):
             # Guardar los cambios en el archivo JSON
             with open(up.VERSION_DIR, 'w') as file:
                 json.dump(data, file, indent=4)
-
+        
         else:
             print(f"Error: {response.status_code} - {response.text}")
 

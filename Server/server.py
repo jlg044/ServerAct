@@ -56,6 +56,10 @@ async def download_update(tag: str, version: str):
     updates = compAct(tag,version)
     if updates == {}:
         return {"error": "Archivo no encontrado"}
+    
+    if(updates == ""):
+        return updates
+        
     return updates
 
 # Ruta para descargar un archivo de actualización
@@ -242,5 +246,5 @@ def HashCreator(archivo):
         return None
 
 def compAct(tag, versAct):
-    cambios2 = db.comprobarActualizacion(tag, versAct)    
-    return cambios2
+    cambiosAct = db.comprobarActualizacion(tag, versAct)
+    return cambiosAct
