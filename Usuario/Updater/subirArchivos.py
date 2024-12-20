@@ -44,9 +44,23 @@ def iteracionArchivos(dir,tag,updates):
             "path": dir,
             "filename": filename
             })
+def create_zip(folder_path, zip_name):
+    print(folder_path)
+    print(zip_name)
+ 
+    #Crea un archivo ZIP a partir de una carpeta.
 
+    with zipfile.ZipFile(zip_name, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(folder_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                # Agrega el archivo al ZIP, eliminando la parte común de la ruta
+                arcname = os.path.relpath(file_path, folder_path)
+                zipf.write(file_path, arcname)
+    print(f"ZIP creado: {zip_name}")
 # Función para subir archivos al servidor
 async def upload_file(update, end=False):
+
     file_name = update["filename"]
     localPath = update["path"]
     modelo = update["tag"]
@@ -68,10 +82,7 @@ async def upload_file(update, end=False):
         else:
             print(f"No hay ninguna version en la ruta proporcionada {modelo}.")
             return
-        
-    print(localPath)
 
-    
 
     middle = ""
     i = 0
@@ -82,9 +93,10 @@ async def upload_file(update, end=False):
         if i!=0:
             middle = os.path.join(middle, paths).replace('\\','/')
         i = i+1
-
+    print(middle)
     urlFile = os.path.join(up.urlServer, modelo, middle).replace('\\','/')
     url_with_end = f"{urlFile}?end={end}"
+    create_zip(path,version)
 
     version = middle.split("/")[0]
     path_zip = "./" + version + ".zip"
@@ -126,12 +138,15 @@ async def main(path):
     model = getModel()
     print("C")
     updates = []
+
     version_dir = os.path.join(path)
     if os.path.isdir(version_dir):  # Verificar que el subdirectorio exista
         iteracionArchivos(version_dir,model,updates)
     else: print(f"Directorio {version_dir} no existe")
-
+    i = 0
     for update in updates:
+        print(i)
+        i=i+1
 
         if (update == updates[-1]):
             await upload_file(update,end = True)
