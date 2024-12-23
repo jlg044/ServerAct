@@ -18,7 +18,7 @@ UserDB = "mario"
 
 PasswordDB = "1881"
 
-hostDB = "10.0.60.87"
+hostDB = "10.0.60.162"
 
 PortDB = 3306
 

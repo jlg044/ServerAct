@@ -22,9 +22,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-cambios = []
-i = 0
-
 #Directorio donde se almacenarán las actualizaciones
 UPDATE_DIR = up.UPDATE_DIR
 os.makedirs(UPDATE_DIR, exist_ok=True)
@@ -125,11 +122,18 @@ async def upload_update(tag: str, version: str, full_path: str, file: UploadFile
     
 # Ruta para subir un archivo de actualización
 @app.put("/updates/{tag}/{version}")
-async def upload_update(tag: str, version: str, file: UploadFile = File(...), end: bool=False):
+async def upload_update(tag: str, version: str, file: UploadFile = File(...)):
 
     """Sube un archivo al servidor y lo organiza por carpetas según el tag."""
-    logger.info(f"Inicio de la subida: tag={tag}, version={version}, end={end}")
-    global cambios
+
+    #Sube un archivo al servidor y lo organiza por carpetas según el tag.
+    versiones = db.listVersions(tag)
+    if versiones != []:
+        if version <= versiones[-1][0]:
+            return {"error": "Path Error: La version a subir debe ser mayor que la ultima version disponible."}
+
+
+    logger.info(f"Inicio de la subida: tag={tag}, version={version}")
     try:
         # Crear el directorio si no existe
         target_path = os.path.join(UPDATE_DIR, tag, version)
@@ -145,18 +149,24 @@ async def upload_update(tag: str, version: str, file: UploadFile = File(...), en
             f.write(await file.read())
         logger.info(f"Archivo guardado correctamente en: {file_path}")
 
-        descomp_zip(file_path, file_path)
+        descomp_zip(file_path, target_path) #dir,tag,updates
+        updates = []
+        
+        iteracionArchivos(target_path,tag,updates)
+        print(f"UPDATES SELECCIONADOS: {updates}")
 
         # Llamar al comparador de archivos
         full_path = ""
-        filesComparator(tag, file.filename, full_path,version)
-        logger.debug(f"Comparación de archivos completada para: {file.filename}")
+        cambios = []
+        for update in updates: # tag,filename,path,versionAct
+            filesComparator(update,version,cambios)
+            print(f"Actualizacion de cambios: {cambios}")
+            logger.debug(f"Comparación de archivos completada para: {file.filename}")
 
         # Si es la última iteración, actualizar la base de datos
-        if end:
-            insertUploadOnDB(version)
-            cambios = []  # Reiniciar cambios
-            logger.info(f"Base de datos actualizada para la versión: {version}")
+
+        insertUploadOnDB(version,cambios)
+        logger.info(f"Base de datos actualizada para la versión: {version}")
 
         return {"message": f"Archivo {version} subido correctamente en la carpeta {tag}."}
 
@@ -206,40 +216,49 @@ def iteracionArchivos(dir,tag,updates):
             "filename": filename
             })
 
-def insertUploadOnDB(version):
-    global cambios
+def insertUploadOnDB(version,cambios):
     db.subirVersion(version, cambios)
 
-def filesComparator(tag,filename,path,versionAct):
+def filesComparator(update,version,cambios):
+    tag = update["tag"]
+    versionAct = version
+    path = update["path"]
+    print(path)
+    filename = update["filename"]
     #Get ultima version
     ultimaVersion = db.listVersions(tag)
     print(ultimaVersion)
+    pathCambios = path.replace('\\','/').split(tag)[-1].split("/")
+    middle = ""
+    i = 0
+    for paths in pathCambios:
+        if i!=0:
+            middle = os.path.join(middle, paths).replace('\\','/')
+        i = i+1
+    pathCambios = os.path.join(tag,version,middle).replace('\\','/')
+    
     if ultimaVersion == []:
-        if path == "":
-            pathCambios = os.path.join(tag,versionAct).replace('\\','/')
-        else:
-            pathCambios = os.path.join(tag,versionAct,path).replace('\\','/')
-            print("\n\nComo has llegado aqui??")
         cambios.append(
 
             {"tag": tag, 
             "path": pathCambios,
             "filename": filename
             })
+        
         return 
     
     ultimaVersion = ultimaVersion[-1][0]
     nuevaVersion = versionAct
 
-    if path == "":    
+    if middle == "":    
         pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,filename).replace('\\','/')   
         pathCambios = os.path.join(tag,nuevaVersion).replace('\\','/')    
         pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,filename).replace('\\','/')
 
     else:
-        pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,path,filename).replace('\\','/')  
-        pathCambios = os.path.join(tag,nuevaVersion,path).replace('\\','/')
-        pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,path,filename).replace('\\','/')
+        pathUV =  os.path.join(up.UPDATE_DIR,tag,ultimaVersion,middle,filename).replace('\\','/')  
+        pathCambios = os.path.join(tag,nuevaVersion,middle).replace('\\','/')
+        pathNV = os.path.join(up.UPDATE_DIR,tag,nuevaVersion,middle,filename).replace('\\','/')
 
     hashUV = HashCreator(pathUV)
     hashNV = HashCreator(pathNV)
