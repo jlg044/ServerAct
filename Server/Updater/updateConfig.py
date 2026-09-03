@@ -14,11 +14,11 @@ VERSION_DIR = "./version.json"
 UPDATE_DIR = './updatesloc'
 
 #Iniciar sesion en la base de datos
-UserDB = "mario"
+UserDB = "your_db_user"
 
-PasswordDB = "1881"
+PasswordDB = "your_db_password"
 
-hostDB = "10.0.60.162"
+hostDB = "your_db_host"
 
 PortDB = 3306
 
